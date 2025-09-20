@@ -804,13 +804,13 @@ private static class TokenInfo {
 
 // Método para registrar tokens válidos
 private void registrarToken(String token, String tipo) {
-    token = token.toUpperCase(); // opcional: para normalizar mayúsculas
+    token = token.toUpperCase(); 
     TokenInfo info = tokensAceptados.get(token);
     if(info == null) {
         info = new TokenInfo(tipo);
         tokensAceptados.put(token, info);
     }
-    info.agregarLinea(yyline + 1); // yyline empieza en 0
+    info.agregarLinea(yyline + 1); 
 }
 
 // Método para mostrar tabla al final
@@ -1247,7 +1247,6 @@ public void imprimirTokens() {
             { errores.add("Error en línea " + (yyline+1) +
                ", columna " + (yycolumn+1) +
                ": " + yytext());
-   return "ERROR: " + yytext();
             }
           // fall through
           case 21: break;
@@ -1260,7 +1259,6 @@ public void imprimirTokens() {
             { errores.add("Error en línea " + (yyline+1) +
                 ", columna " + (yycolumn+1) +
                 ": string sin cerrar. Texto: " + yytext());
-    return "ERROR STRING: " + yytext();
             }
           // fall through
           case 23: break;
@@ -1268,31 +1266,26 @@ public void imprimirTokens() {
             { errores.add("Error en línea " + (yyline+1) +
                 ", columna " + (yycolumn+1) +
                 ": carácter sin cerrar. Texto: " + yytext());
-    return "ERROR CARACTER: " + yytext();
             }
           // fall through
           case 24: break;
           case 5:
             { registrarToken(yytext(), "OPERADOR");
-    return "OPERADOR: " + yytext();
             }
           // fall through
           case 25: break;
           case 6:
             { registrarToken(yytext(), "LITERAL ENTERO");
-    return "LITERAL ENTERO: " + yytext();
             }
           // fall through
           case 26: break;
           case 7:
             { registrarToken(yytext(), "IDENTIFICADOR");
-    return "IDENTIFICADOR: " + yytext();
             }
           // fall through
           case 27: break;
           case 8:
             { registrarToken(yytext(), "LITERAL STRING");
-    return "LITERAL STRING: " + yytext();
             }
           // fall through
           case 28: break;
@@ -1300,7 +1293,6 @@ public void imprimirTokens() {
             { errores.add("Error en línea " + (yyline+1) +
                 ", columna " + (yycolumn+1) +
                 ": carácter inválido. Texto: " + yytext());
-    return "ERROR CARACTER: " + yytext();
             }
           // fall through
           case 29: break;
@@ -1308,13 +1300,11 @@ public void imprimirTokens() {
             { errores.add("Error en línea " + (yyline+1) +
                 ", columna " + (yycolumn+1) +
                 ": número real incorrecto. Texto: " + yytext());
-    return "ERROR REAL: " + yytext();
             }
           // fall through
           case 30: break;
           case 11:
             { registrarToken(yytext(), "LITERAL OCTAL");
-    return "LITERAL OCTAL: " + yytext();
             }
           // fall through
           case 31: break;
@@ -1322,13 +1312,11 @@ public void imprimirTokens() {
             { errores.add("Error en línea " + (yyline+1) +
                 ", columna " + (yycolumn+1) +
                 ": identificador inválido, no puede iniciar con un número. Texto: " + yytext());
-    return "ERROR IDENTIFICADOR: " + yytext();
             }
           // fall through
           case 32: break;
           case 13:
             { registrarToken(yytext(), "PALABRA RESERVADA");
-    return "PALABRA RESERVADA: " + yytext();
             }
           // fall through
           case 33: break;
@@ -1341,25 +1329,21 @@ public void imprimirTokens() {
             { errores.add("Error en línea " + (yyline+1) +
                 ", columna " + (yycolumn+1) +
                 ": string incorrecto. Texto: " + yytext());
-    return "ERROR STRING: " + yytext();
             }
           // fall through
           case 35: break;
           case 16:
             { registrarToken(yytext(), "LITERAL CARACTER");
-    return "LITERAL CARACTER: " + yytext();
             }
           // fall through
           case 36: break;
           case 17:
             { registrarToken(yytext(), "LITERAL REAL");
-    return "LITERAL REAL: " + yytext();
             }
           // fall through
           case 37: break;
           case 18:
             { registrarToken(yytext(), "LITERAL HEXADECIMAL");
-    return "LITERAL HEXADECIMAL: " + yytext();
             }
           // fall through
           case 38: break;
@@ -1367,7 +1351,6 @@ public void imprimirTokens() {
             { errores.add("Error en línea " + (yyline+1) +
                 ", columna " + (yycolumn+1) +
                 ": identificador inválido, solo se permiten letras y dígitos. Texto: " + yytext());
-    return "ERROR IDENTIFICADOR: " + yytext();
             }
           // fall through
           case 39: break;

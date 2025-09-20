@@ -2,6 +2,8 @@ BEGIN
    VAR contador, Valor123;
    VAR 1invalido;
    VAR muyLargoIdentificadorQueSuperaElLimiteDe127Caracteres_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;
+   VAR MUY_CORTO;
+
 
    contador := 10;
    contador := 07760;
@@ -27,4 +29,5 @@ BEGIN
    resultado := resultado && 2;
    DIV
    OR
+   42, 0x2A, 0o52, 0b101010, 123.3123
 END

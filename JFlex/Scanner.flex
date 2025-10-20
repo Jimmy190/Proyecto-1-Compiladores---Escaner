@@ -22,7 +22,9 @@ OPERADOR = \+|\-|\*|\/|DIV|MOD|NOT|AND|OR|=|<>|<|>|<=|>=|IN|,|;|\+\+|\-\-|\(|\)|
 NumeroRealIncorrecto = \.[0-9]+|[0-9]+\.
 // Comentarios
 Comentario1 = \{[^}]*\}
+Comentario1MalCerrado = \{[^}]*
 Comentario2 = \(\*([^*]|\*[^)])*\*\)
+Comentario2MalCerrado = \(\*([^*]|\*[^)])*
 
 // Literales
 Octal         = 0[0-7]+
@@ -38,12 +40,17 @@ CharSinCierre = \'[^\'\n\r]*
 Char          = \'([^\'\n]|\\.)\' 
 
 // Identificadores (1-127 letras/dígitos, inicia con letra, no palabra reservada)
-// Identificador válido: empieza con letra, sigue con letras/dígitos
-Identificador = [a-zA-Z][a-zA-Z0-9]{0,126}
 // Identificador inválido que comienza con número
 IdentificadorNumero = [0-9][a-zA-Z0-9]*
+// Identificador inválido que comienzan con caracteres no permitidos
+IdentificadorSimbolo = [^a-zA-Z0-9 \t\n\r][a-zA-Z0-9]*
 // Identificador inválido con caracteres no permitidos (pero SIN espacios)
 IdentificadorInvalido = [a-zA-Z][a-zA-Z0-9]*[^a-zA-Z0-9 \t\n\r]+[a-zA-Z0-9]+
+// Identificador inválido: 128 o más caracteres
+IdentificadorMuyLargo = [a-zA-Z][a-zA-Z0-9]{127}[a-zA-Z0-9]*
+// Identificador válido: empieza con letra, sigue con letras/dígitos
+Identificador = [a-zA-Z][a-zA-Z0-9]{0,126}
+
 
 
 
@@ -105,9 +112,22 @@ public void imprimirTokens() {
 
 %%
 
-// Omitir comentarios
-{Comentario1}        { /* Ignorar comentario tipo { } */ }
-{Comentario2}        { /* Ignorar comentario tipo (* *) */ }
+// Comentarios
+{Comentario1MalCerrado} {
+    errores.add("Error en línea " + (yyline+1) +
+                ", comentario '{' sin cerrar. Texto: " + yytext());
+}
+{Comentario2MalCerrado} {
+    errores.add("Error en línea " + (yyline+1) +
+                ", comentario '(*' sin cerrar. Texto: " + yytext());
+}
+{Comentario1} {
+    registrarToken(yytext(), "COMENTARIO");
+}
+{Comentario2} {
+    registrarToken(yytext(), "COMENTARIO");
+}
+
 
 // Ignorar espacios y saltos de línea
 [ \t\n\r]+           { /* Ignorar */ }
@@ -178,10 +198,20 @@ public void imprimirTokens() {
                 ", columna " + (yycolumn+1) +
                 ": identificador inválido, no puede iniciar con un número. Texto: " + yytext());
 }
+{IdentificadorSimbolo} {
+    errores.add("Error en línea " + (yyline+1) +
+                ", columna " + (yycolumn+1) +
+                ": identificador inválido, no puede iniciar con símbolo. Texto: " + yytext());
+}
 {IdentificadorInvalido} {
     errores.add("Error en línea " + (yyline+1) +
                 ", columna " + (yycolumn+1) +
                 ": identificador inválido, solo se permiten letras y dígitos. Texto: " + yytext());
+}
+{IdentificadorMuyLargo} {
+    errores.add("Error en línea " + (yyline+1) +
+                ", columna " + (yycolumn+1) +
+                ": identificador inválido, excede el máximo de 127 caracteres. Texto: " + yytext());
 }
 {Identificador} {
     registrarToken(yytext(), "IDENTIFICADOR");

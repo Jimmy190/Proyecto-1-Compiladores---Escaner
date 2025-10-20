@@ -1,33 +1,46 @@
+{ Comentario correcto }
+
+(* Comentario correcto con varias * pero bien cerrado *)
+
 BEGIN
-   VAR contador, Valor123;
-   VAR 1invalido;
-   VAR muyLargoIdentificadorQueSuperaElLimiteDe127Caracteres_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;
-   VAR MUY_CORTO;
-
-
-   contador := 10;
-   contador := 07760;
-   contador := 0x1A3F;
-   contador := 5.0;
-   contador := 0.5E-3;
-   contador := .5;
-   contador := 5.;
-
-   mensaje := "Hola Mundo";
-   mensaje := "Hola
-   Mundo";
-   mensaje := "Hola
-
-   caracter := 'a' 'a' 'a';
-   caracter := 'ab';
-   caracter := 'a;
-   caracter := ' ';
-   caracter := '';
-
-   resultado := contador + 5;
-   resultado := resultado ** 2;
-   resultado := resultado && 2;
-   DIV
-   OR
-   42, 0x2A, 0o52, 0b101010, 123.3123
 END
+IF
+WHILE
+MOD
+UNTIL
+
++ - * / DIV MOD NOT AND OR = <> < > <= >= IN , ; ++ -- ( ) [ ] : . ^ **
+
+variable
+var123
+AbcDEF456
+
+123abc
+$simbolo
+ab$cd
+a123a456a789a012a345a678a901a234a567a890a123a456a789a012a345a678a901a234a567a890a123a456a789a012a345a678a901a234a567a890a123a657
+
+"hola mundo"
+"string sin cerrar
+"string
+con salto"
+
+'a'
+'b' 'c'
+'ab'
+'c
+
+123
+0xFA12
+075
+12.34
+.123
+123.
+1.23e+10
+12.3e+
+
+{ comentario con símbolos * + - / }
+
+(* comentario multilínea
+   con texto
+   y símbolos + - /  *)

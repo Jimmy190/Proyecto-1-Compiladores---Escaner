@@ -1,0 +1,12 @@
+ x: int; 
+ 
+ 
+_ss REAL;  
+ 
+%adios;
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+
+(* COMENTARIO NO CERRADO
+                DEBE DAR ERROR

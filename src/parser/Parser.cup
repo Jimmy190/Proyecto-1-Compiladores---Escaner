@@ -182,8 +182,10 @@ inicio ::= programa;
 /* ========== Estructura del Programa ========== */
 programa ::= PROGRAM IDENTIFICADOR variables_globales funciones_globales cuerpo_main
            | PROGRAM IDENTIFICADOR variables_globales funciones_globales cuerpo_main PUNTO
-           | error cuerpo_main
-             {: parser.report_error("Error en la estructura del programa. Se esperaba 'PROGRAM nombre'", null); :}
+           | PROGRAM error variables_globales funciones_globales cuerpo_main
+             {: parser.report_error("Falta el nombre del programa despues de PROGRAM", null); :}
+           | error
+             {: parser.report_error("Falta palabra clave PROGRAM al inicio del archivo", null); :}
            ;
 
 /* ========== Declaracion de Variables Globales ========== */
@@ -196,6 +198,10 @@ lista_declaraciones_globales ::= declaracion_variable_global
                                 ;
 
 declaracion_variable_global ::= lista_identificadores DOS_PUNTOS tipo PUNTO_COMA
+                               | lista_identificadores DOS_PUNTOS error PUNTO_COMA
+                                 {: parser.report_error("Tipo de dato invalido o faltante en declaracion de variable. Use: INT, REAL, STRING o CHAR", null); :}
+                               | lista_identificadores error tipo PUNTO_COMA
+                                 {: parser.report_error("Falta ':' en declaracion de variable. Formato correcto: 'variable : TIPO;'", null); :}
                                ;
 
 lista_identificadores ::= IDENTIFICADOR mas_identificadores
@@ -213,10 +219,16 @@ funciones_globales ::= funcion_global funciones_globales
 
 /* ========== FUNCTION ========== */
 funcion_global ::= FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS tipo cuerpo_funcion
+                 | FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros error DOS_PUNTOS tipo cuerpo_funcion
+                   {: parser.report_error("Falta ')' en declaracion de parametros de funcion", null); :}
+                 | FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER error tipo cuerpo_funcion
+                   {: parser.report_error("Falta ':' antes del tipo de retorno de funcion", null); :}
+                 | FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS error cuerpo_funcion
+                   {: parser.report_error("Tipo de retorno invalido en funcion. Use: INT, REAL, STRING o CHAR", null); :}
+                 | FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS tipo error END
+                   {: parser.report_error("Falta BEGIN en cuerpo de funcion", null); :}
                  | FUNCTION error cuerpo_funcion
                    {: parser.report_error("Error en declaracion de funcion. Formato: 'FUNCTION nombre(parametros): TIPO BEGIN ... END'", null); :}
-                 | FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS tipo error END
-                   {: parser.report_error("Error en cuerpo de funcion. Debe comenzar con BEGIN", null); :}
                  ;
 
 parametros ::= tipo IDENTIFICADOR mas_parametros
@@ -241,6 +253,10 @@ retorno ::= IDENTIFICADOR ASIGNACION expresion PUNTO_COMA
 
 /* ========== PROCEDURE ========== */
 procedure_global ::= PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER cuerpo_procedure
+                   | PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros error cuerpo_procedure
+                     {: parser.report_error("Falta ')' en declaracion de parametros de procedimiento", null); :}
+                   | PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER error END
+                     {: parser.report_error("Falta BEGIN en cuerpo de procedimiento", null); :}
                    | PROCEDURE error cuerpo_procedure
                      {: parser.report_error("Error en declaracion de procedimiento. Formato: 'PROCEDURE nombre(parametros) BEGIN ... END'", null); :}
                    ;
@@ -294,8 +310,6 @@ sentencia_main ::= IDENTIFICADOR ASIGNACION expresion PUNTO_COMA
 expresion ::= expresion MAS termino
             | expresion MENOS termino
             | termino
-            | error
-              {: parser.report_error("Expresion aritmetica invalida. Verifique operadores y operandos", null); :}
             ;
 
 termino ::= termino POR factor
@@ -351,39 +365,53 @@ estructura_control ::= while_stmt
                      ;
 
 while_stmt ::= WHILE condicion DO BEGIN sentencias_main END
+             | WHILE condicion error BEGIN sentencias_main END
+               {: parser.report_error("Falta DO en estructura WHILE. Formato: 'WHILE condicion DO BEGIN ... END'", null); :}
+             | WHILE condicion DO error END
+               {: parser.report_error("Falta BEGIN en cuerpo de WHILE", null); :}
              | WHILE error DO BEGIN sentencias_main END
                {: parser.report_error("Condicion invalida en WHILE. Debe ser una expresion booleana", null); :}
-             | WHILE condicion DO error END
-               {: parser.report_error("Error en cuerpo de WHILE. Debe comenzar con BEGIN", null); :}
              ;
 
 for_stmt ::= FOR IDENTIFICADOR ASIGNACION expresion TO expresion DO BEGIN sentencias_main END
-           | FOR error DO BEGIN sentencias_main END
-             {: parser.report_error("Error en declaracion de FOR. Formato: 'FOR var := exp1 TO exp2 DO BEGIN ... END'", null); :}
+           | FOR IDENTIFICADOR error expresion TO expresion DO BEGIN sentencias_main END
+             {: parser.report_error("Falta ':=' en FOR. Formato: 'FOR variable := inicio TO fin DO BEGIN ... END'", null); :}
+           | FOR IDENTIFICADOR ASIGNACION expresion error expresion DO BEGIN sentencias_main END
+             {: parser.report_error("Falta TO en FOR. Formato: 'FOR variable := inicio TO fin DO BEGIN ... END'", null); :}
+           | FOR IDENTIFICADOR ASIGNACION expresion TO expresion error BEGIN sentencias_main END
+             {: parser.report_error("Falta DO en FOR. Formato: 'FOR variable := inicio TO fin DO BEGIN ... END'", null); :}
            | FOR IDENTIFICADOR ASIGNACION expresion TO expresion DO error END
-             {: parser.report_error("Error en cuerpo de FOR. Debe comenzar con BEGIN", null); :}
+             {: parser.report_error("Falta BEGIN en cuerpo de FOR", null); :}
+           | FOR error DO BEGIN sentencias_main END
+             {: parser.report_error("Error en declaracion de FOR. Formato: 'FOR variable := inicio TO fin DO BEGIN ... END'", null); :}
            ;
 
 if_stmt ::= IF condicion THEN BEGIN sentencias_main END
           | IF condicion THEN BEGIN sentencias_main END ELSE BEGIN sentencias_main END
+          | IF condicion error BEGIN sentencias_main END
+            {: parser.report_error("Falta THEN en estructura IF. Formato: 'IF condicion THEN BEGIN ... END'", null); :}
+          | IF condicion THEN error END
+            {: parser.report_error("Falta BEGIN en cuerpo de IF", null); :}
+          | IF condicion THEN BEGIN sentencias_main END ELSE error END
+            {: parser.report_error("Falta BEGIN en cuerpo de ELSE", null); :}
           | IF error THEN BEGIN sentencias_main END
             {: parser.report_error("Condicion invalida en IF. Debe ser una expresion booleana", null); :}
-          | IF condicion THEN error END
-            {: parser.report_error("Error en cuerpo de IF. Debe comenzar con BEGIN", null); :}
-          | IF condicion THEN BEGIN sentencias_main END ELSE error END
-            {: parser.report_error("Error en cuerpo de ELSE. Debe comenzar con BEGIN", null); :}
           ;
 
 /* ========== READ Y WRITE ========== */
 read_stmt ::= READ PARENTESIS_IZQ PARENTESIS_DER PUNTO_COMA
             | READ PARENTESIS_IZQ IDENTIFICADOR PARENTESIS_DER PUNTO_COMA
+            | READ PARENTESIS_IZQ error PARENTESIS_DER PUNTO_COMA
+              {: parser.report_error("Argumento invalido en READ. Use un identificador de variable", null); :}
             | READ error PUNTO_COMA
-              {: parser.report_error("Error en READ. Formato: 'READ();' o 'READ(variable);'", null); :}
+              {: parser.report_error("Falta '(' despues de READ. Formato: 'READ();' o 'READ(variable);'", null); :}
             ;
 
 write_stmt ::= WRITE PARENTESIS_IZQ lista_expresiones PARENTESIS_DER PUNTO_COMA
+             | WRITE PARENTESIS_IZQ error PARENTESIS_DER PUNTO_COMA
+               {: parser.report_error("Expresion invalida en WRITE. Use expresiones, variables o literales", null); :}
              | WRITE error PUNTO_COMA
-               {: parser.report_error("Error en WRITE. Formato: 'WRITE(expresion1, expresion2, ...);'", null); :}
+               {: parser.report_error("Falta '(' despues de WRITE. Formato: 'WRITE(exp1, exp2, ...);'", null); :}
              ;
 
 /* ========== LLAMADAS A FUNCIONES ========== */

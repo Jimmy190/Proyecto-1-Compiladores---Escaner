@@ -1,0 +1,8 @@
+PROGRAM ErrorChar
+VAR
+    letra : CHAR;
+BEGIN
+    letra := '';
+    letra := 'ab';
+    letra := 'sin cerrar;
+END

@@ -1,0 +1,8 @@
+PROGRAM ErrorCaracteres
+VAR
+    x : INT;
+BEGIN
+    x := 10 @ 5;
+    x := 20 # 3;
+    x := $ 100;
+END

@@ -1,0 +1,35 @@
+# Archivos compilados
+bin/
+*.class
+
+# Archivos generados por JFlex y CUP
+src/lexer/Scanner.java
+src/parser/Parser.java
+src/parser/sym.java
+
+# Archivos temporales
+*.java~
+*.bak
+*~
+.DS_Store
+Thumbs.db
+
+# Archivos de IDE
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+
+# Archivos de sistema
+desktop.ini
+.directory
+
+# Logs
+*.log
+
+# Archivos PDF (ya tenemos .md)
+docs/*.pdf
+
+# Archivos de respaldo obsoletos
+gramatica.txt

@@ -1,0 +1,12 @@
+PROGRAM TestWHILE
+VAR
+    contador : INT;
+BEGIN
+    contador := 0;
+    
+    WHILE contador < 10 DO
+    BEGIN
+        WRITE(contador);
+        contador := contador + 1;
+    END
+END

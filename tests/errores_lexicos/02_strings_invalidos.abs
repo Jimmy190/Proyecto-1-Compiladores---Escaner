@@ -1,0 +1,8 @@
+PROGRAM ErrorString
+VAR
+    mensaje : STRING;
+BEGIN
+    mensaje := "Texto sin cerrar;
+    mensaje := "Texto con
+salto de linea";
+END

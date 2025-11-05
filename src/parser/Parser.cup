@@ -1,0 +1,406 @@
+/* ====== Parser para Pascal ABS - Con Recuperacion de Errores ====== */
+package parser;
+import java_cup.runtime.*;
+import java.util.ArrayList;
+
+parser code {:
+    // Lista para almacenar errores sintacticos
+    private ArrayList<String> erroresSintacticos = new ArrayList<>();
+    private int errorCount = 0;
+    private static final int MAX_ERRORS = 50; // Limite de errores antes de abortar
+    
+    public ArrayList<String> getErroresSintacticos() {
+        return erroresSintacticos;
+    }
+    
+    // Metodo mejorado para reportar errores sintacticos con contexto
+    public void report_error(String message, Object info) {
+        if (errorCount >= MAX_ERRORS) {
+            return; // Evitar reportar demasiados errores
+        }
+        
+        if (info instanceof Symbol) {
+            Symbol s = (Symbol)info;
+            int line = (s.left >= 0 ? s.left + 1 : 1);
+            int column = (s.right >= 0 ? s.right + 1 : 1);
+            
+            String errorMsg = String.format("Linea %d, Columna %d: %s", line, column, message);
+            
+            // Evitar errores duplicados
+            if (!erroresSintacticos.contains(errorMsg)) {
+                erroresSintacticos.add(errorMsg);
+                errorCount++;
+            }
+        } else {
+            String errorMsg = "Error sintactico: " + message;
+            if (!erroresSintacticos.contains(errorMsg)) {
+                erroresSintacticos.add(errorMsg);
+                errorCount++;
+            }
+        }
+    }
+    
+    public void report_fatal_error(String message, Object info) {
+        report_error("Error fatal: " + message, info);
+    }
+    
+    // Metodo mejorado con mensajes mas descriptivos
+    public void syntax_error(Symbol cur_token) {
+        String tokenValue = (cur_token.value != null ? cur_token.value.toString() : "fin de archivo");
+        String errorMsg = String.format(
+            "Token inesperado '%s'. Verifique la sintaxis del programa", 
+            tokenValue
+        );
+        report_error(errorMsg, cur_token);
+    }
+    
+    public void unrecovered_syntax_error(Symbol cur_token) {
+        String tokenValue = (cur_token.value != null ? cur_token.value.toString() : "fin de archivo");
+        String errorMsg = String.format(
+            "Error de sintaxis irrecuperable en '%s'. El analisis no puede continuar desde este punto", 
+            tokenValue
+        );
+        report_error(errorMsg, cur_token);
+    }
+    
+    // Metodo auxiliar para reportar errores especificos
+    public void reportarErrorEspecifico(String contexto, String esperado, String encontrado, Symbol s) {
+        String errorMsg = String.format(
+            "%s: Se esperaba %s, pero se encontro '%s'",
+            contexto, esperado, encontrado
+        );
+        report_error(errorMsg, s);
+    }
+:}
+
+/* ========== TODOS LOS TERMINALES DEL JFLEX ========== */
+terminal 
+    /* Palabras reservadas COMPLETAS */
+    ABSOLUTE, AND, ARRAY, ASM, BEGIN, CASE, CONST, CONSTRUCTOR,
+    DESTRUCTOR, DIV, DO, DOWNTO, ELSE, END, EXTERNAL, FILE, FOR, 
+    FORWARD, FUNCTION, GOTO, IF, IMPLEMENTATION, IN, INLINE, INTERFACE, 
+    INTERRUPT, LABEL, MOD, NIL, NOT, OBJECT, OF, OR, PACKED, PRIVATE, 
+    PROCEDURE, PROGRAM, RECORD, REPEAT, SET, SHL, SHR, STRING, THEN, 
+    TO, TYPE, UNIT, UNTIL, USES, VAR, VIRTUAL, WHILE, WITH, XOR,
+    INT, CHAR, READ, REAL, WRITE,
+
+    /* Operadores y simbolos COMPLETOS */
+    MAS, MENOS, POR, DIVISION, INCREMENTO, DECREMENTO, POTENCIA,
+    IGUAL, DIFERENTE, MENOR, MAYOR, MENOR_IGUAL, MAYOR_IGUAL,
+    ASIGNACION, PUNTO_COMA, COMA, DOS_PUNTOS, PARENTESIS_IZQ, 
+    PARENTESIS_DER, CORCHETE_IZQ, CORCHETE_DER, PUNTO, PUNTERO,
+    
+    /* Literales COMPLETOS */
+    LIT_ENTERO, LIT_REAL, LIT_OCTAL, LIT_HEX, LIT_STRING, LIT_CHAR,
+    
+    /* Identificadores */
+    IDENTIFICADOR;
+
+/* ========== REGLAS DE PRODUCCION - NON TERMINALS ========== */
+non terminal
+    // Estructura del Programa
+    inicio,
+    programa,
+    
+    // Declaracion de Variables
+    variables_globales,
+    lista_declaraciones_globales,
+    declaracion_variable_global,
+    lista_identificadores,
+    mas_identificadores,
+    
+    // Declaracion de Funciones y Procedures
+    funciones_globales,
+    funcion_global,
+    procedure_global,
+    parametros,
+    mas_parametros,
+    cuerpo_funcion,
+    cuerpo_procedure,
+    bloque_funcion,
+    bloque_procedure,
+    retorno,
+    
+    // Sentencias
+    sentencias,
+    sentencia,
+    sentencias_main,
+    sentencia_main,
+    
+    // Expresiones Aritmeticas
+    expresion,
+    termino,
+    factor,
+    
+    // Expresiones Booleanas (Condiciones)
+    condicion,
+    condicion_and,
+    condicion_not,
+    condicion_relacional,
+    
+    // Estructuras de Control
+    estructura_control,
+    while_stmt,
+    for_stmt,
+    if_stmt,
+    
+    // READ y WRITE
+    read_stmt,
+    write_stmt,
+    
+    // Llamadas a funciones
+    llamada_funcion,
+    lista_expresiones,
+    mas_expresiones,
+    
+    // Tipos de datos
+    tipo,
+    
+    // Main
+    cuerpo_main;
+
+/* ========== PRECEDENCIAS DE OPERADORES ========== */
+// Precedencia de operadores booleanos (menor a mayor)
+precedence left OR;
+precedence left AND;
+precedence right NOT;
+
+// Precedencia de operadores relacionales
+precedence left IGUAL, DIFERENTE, MENOR, MAYOR, MENOR_IGUAL, MAYOR_IGUAL;
+
+// Precedencia de operadores aritmeticos (menor a mayor)
+precedence left MAS, MENOS;
+precedence left POR, DIVISION, DIV, MOD;
+precedence right INCREMENTO, DECREMENTO;
+precedence left POTENCIA;
+
+/* ========== INICIO ========== */
+start with inicio;
+
+inicio ::= programa;
+
+/* ========== Estructura del Programa ========== */
+programa ::= PROGRAM IDENTIFICADOR variables_globales funciones_globales cuerpo_main
+           | PROGRAM IDENTIFICADOR variables_globales funciones_globales cuerpo_main PUNTO
+           | error cuerpo_main
+             {: parser.report_error("Error en la estructura del programa. Se esperaba 'PROGRAM nombre'", null); :}
+           ;
+
+/* ========== Declaracion de Variables Globales ========== */
+variables_globales ::= VAR lista_declaraciones_globales
+                     | /* vacío */   
+                     ;
+
+lista_declaraciones_globales ::= declaracion_variable_global
+                                | lista_declaraciones_globales declaracion_variable_global
+                                ;
+
+declaracion_variable_global ::= lista_identificadores DOS_PUNTOS tipo PUNTO_COMA
+                               ;
+
+lista_identificadores ::= IDENTIFICADOR mas_identificadores
+                        ;
+
+mas_identificadores ::= COMA IDENTIFICADOR mas_identificadores
+                      | /* vacío */
+                      ;
+
+/* ========== Declaracion de Funciones y Procedures ========== */
+funciones_globales ::= funcion_global funciones_globales
+                     | procedure_global funciones_globales
+                     | /* epsilon */
+                     ;
+
+/* ========== FUNCTION ========== */
+funcion_global ::= FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS tipo cuerpo_funcion
+                 | FUNCTION error cuerpo_funcion
+                   {: parser.report_error("Error en declaracion de funcion. Formato: 'FUNCTION nombre(parametros): TIPO BEGIN ... END'", null); :}
+                 | FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS tipo error END
+                   {: parser.report_error("Error en cuerpo de funcion. Debe comenzar con BEGIN", null); :}
+                 ;
+
+parametros ::= tipo IDENTIFICADOR mas_parametros
+             | /* epsilon */
+             ;
+
+mas_parametros ::= COMA tipo IDENTIFICADOR mas_parametros
+                 | /* epsilon */
+                 ;
+
+cuerpo_funcion ::= BEGIN bloque_funcion END
+                 ;
+
+bloque_funcion ::= VAR lista_declaraciones_globales sentencias retorno
+                 | VAR lista_declaraciones_globales retorno
+                 | sentencias retorno
+                 | retorno
+                 ;
+
+retorno ::= IDENTIFICADOR ASIGNACION expresion PUNTO_COMA
+          ;
+
+/* ========== PROCEDURE ========== */
+procedure_global ::= PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER cuerpo_procedure
+                   | PROCEDURE error cuerpo_procedure
+                     {: parser.report_error("Error en declaracion de procedimiento. Formato: 'PROCEDURE nombre(parametros) BEGIN ... END'", null); :}
+                   ;
+
+cuerpo_procedure ::= BEGIN bloque_procedure END
+                   ;
+
+bloque_procedure ::= VAR lista_declaraciones_globales sentencias
+                   | VAR lista_declaraciones_globales
+                   | sentencias
+                   | /* vacío */
+                   ;
+
+/* ========== Sentencias (dentro de funciones/procedures) ========== */
+sentencias ::= sentencia
+             | sentencias sentencia
+             ;
+
+sentencia ::= IDENTIFICADOR ASIGNACION expresion PUNTO_COMA
+            | estructura_control
+            | llamada_funcion PUNTO_COMA
+            | read_stmt
+            | write_stmt
+            | IDENTIFICADOR INCREMENTO PUNTO_COMA
+            | IDENTIFICADOR DECREMENTO PUNTO_COMA
+            | error PUNTO_COMA
+              {: parser.report_error("Error en sentencia. Verifique asignaciones, llamadas a funciones o estructuras de control", null); :}
+            ;
+
+/* ========== Cuerpo del Main ========== */
+cuerpo_main ::= BEGIN sentencias_main END
+              | BEGIN END
+              ;
+
+sentencias_main ::= sentencia_main
+                  | sentencias_main sentencia_main
+                  ;
+
+sentencia_main ::= IDENTIFICADOR ASIGNACION expresion PUNTO_COMA
+                 | estructura_control
+                 | llamada_funcion PUNTO_COMA
+                 | read_stmt
+                 | write_stmt
+                 | IDENTIFICADOR INCREMENTO PUNTO_COMA
+                 | IDENTIFICADOR DECREMENTO PUNTO_COMA
+                 | error PUNTO_COMA
+                   {: parser.report_error("Error en sentencia del programa principal", null); :}
+                 ;
+
+/* ========== EXPRESIONES ARITMETICAS ========== */
+expresion ::= expresion MAS termino
+            | expresion MENOS termino
+            | termino
+            | error
+              {: parser.report_error("Expresion aritmetica invalida. Verifique operadores y operandos", null); :}
+            ;
+
+termino ::= termino POR factor
+          | termino DIVISION factor
+          | termino DIV factor
+          | termino MOD factor
+          | factor
+          ;
+
+factor ::= PARENTESIS_IZQ expresion PARENTESIS_DER
+         | IDENTIFICADOR
+         | llamada_funcion
+         | LIT_ENTERO
+         | LIT_REAL
+         | LIT_OCTAL
+         | LIT_HEX
+         | LIT_STRING
+         | LIT_CHAR
+         | MENOS factor
+         | MAS factor
+         | IDENTIFICADOR INCREMENTO
+         | IDENTIFICADOR DECREMENTO
+         | INCREMENTO IDENTIFICADOR
+         | DECREMENTO IDENTIFICADOR
+         ;
+
+/* ========== EXPRESIONES BOOLEANAS (CONDICIONES) ========== */
+condicion ::= condicion OR condicion_and
+            | condicion_and
+            ;
+
+condicion_and ::= condicion_and AND condicion_not
+                | condicion_not
+                ;
+
+condicion_not ::= NOT condicion_not
+                | condicion_relacional
+                ;
+
+condicion_relacional ::= expresion IGUAL expresion
+                       | expresion DIFERENTE expresion
+                       | expresion MENOR expresion
+                       | expresion MAYOR expresion
+                       | expresion MENOR_IGUAL expresion
+                       | expresion MAYOR_IGUAL expresion
+                       | PARENTESIS_IZQ condicion PARENTESIS_DER
+                       ;
+
+/* ========== ESTRUCTURAS DE CONTROL ========== */
+estructura_control ::= while_stmt
+                     | for_stmt
+                     | if_stmt
+                     ;
+
+while_stmt ::= WHILE condicion DO BEGIN sentencias_main END
+             | WHILE error DO BEGIN sentencias_main END
+               {: parser.report_error("Condicion invalida en WHILE. Debe ser una expresion booleana", null); :}
+             | WHILE condicion DO error END
+               {: parser.report_error("Error en cuerpo de WHILE. Debe comenzar con BEGIN", null); :}
+             ;
+
+for_stmt ::= FOR IDENTIFICADOR ASIGNACION expresion TO expresion DO BEGIN sentencias_main END
+           | FOR error DO BEGIN sentencias_main END
+             {: parser.report_error("Error en declaracion de FOR. Formato: 'FOR var := exp1 TO exp2 DO BEGIN ... END'", null); :}
+           | FOR IDENTIFICADOR ASIGNACION expresion TO expresion DO error END
+             {: parser.report_error("Error en cuerpo de FOR. Debe comenzar con BEGIN", null); :}
+           ;
+
+if_stmt ::= IF condicion THEN BEGIN sentencias_main END
+          | IF condicion THEN BEGIN sentencias_main END ELSE BEGIN sentencias_main END
+          | IF error THEN BEGIN sentencias_main END
+            {: parser.report_error("Condicion invalida en IF. Debe ser una expresion booleana", null); :}
+          | IF condicion THEN error END
+            {: parser.report_error("Error en cuerpo de IF. Debe comenzar con BEGIN", null); :}
+          | IF condicion THEN BEGIN sentencias_main END ELSE error END
+            {: parser.report_error("Error en cuerpo de ELSE. Debe comenzar con BEGIN", null); :}
+          ;
+
+/* ========== READ Y WRITE ========== */
+read_stmt ::= READ PARENTESIS_IZQ PARENTESIS_DER PUNTO_COMA
+            | READ PARENTESIS_IZQ IDENTIFICADOR PARENTESIS_DER PUNTO_COMA
+            | READ error PUNTO_COMA
+              {: parser.report_error("Error en READ. Formato: 'READ();' o 'READ(variable);'", null); :}
+            ;
+
+write_stmt ::= WRITE PARENTESIS_IZQ lista_expresiones PARENTESIS_DER PUNTO_COMA
+             | WRITE error PUNTO_COMA
+               {: parser.report_error("Error en WRITE. Formato: 'WRITE(expresion1, expresion2, ...);'", null); :}
+             ;
+
+/* ========== LLAMADAS A FUNCIONES ========== */
+llamada_funcion ::= IDENTIFICADOR PARENTESIS_IZQ lista_expresiones PARENTESIS_DER
+                  | IDENTIFICADOR PARENTESIS_IZQ PARENTESIS_DER
+                  ;
+
+lista_expresiones ::= expresion mas_expresiones
+                    ;
+
+mas_expresiones ::= COMA expresion mas_expresiones
+                  | /* vacío */
+                  ;
+
+/* ========== TIPOS DE DATOS ========== */
+tipo ::= INT
+       | CHAR
+       | REAL
+       | STRING
+       ;

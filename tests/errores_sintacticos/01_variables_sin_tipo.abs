@@ -1,0 +1,8 @@
+PROGRAM ErrorVariables
+VAR
+    x, y : ;
+    nombre : STRING;
+    edad : ;
+    contador : INT;
+BEGIN
+END

@@ -1,0 +1,7 @@
+PROGRAM ErrorProcedure
+PROCEDURE Imprimir(STRING texto)
+    WRITE(texto);
+END
+
+BEGIN
+END

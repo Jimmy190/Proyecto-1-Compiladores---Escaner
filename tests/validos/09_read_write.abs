@@ -1,0 +1,15 @@
+PROGRAM TestReadWrite
+VAR
+    nombre : STRING;
+    edad : INT;
+BEGIN
+    WRITE("Ingrese su nombre:");
+    READ(nombre);
+    
+    WRITE("Ingrese su edad:");
+    READ(edad);
+    
+    WRITE("Hola", nombre, "tienes", edad, "años");
+    
+    READ();
+END

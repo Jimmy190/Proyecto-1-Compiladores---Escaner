@@ -1,0 +1,13 @@
+PROGRAM TestFuncion
+VAR
+    resultado : INT;
+
+FUNCTION Sumar(INT a, INT b): INT
+BEGIN
+    Sumar := a + b;
+END
+
+BEGIN
+    resultado := Sumar(5, 3);
+    WRITE(resultado);
+END

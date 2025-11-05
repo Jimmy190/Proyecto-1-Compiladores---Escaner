@@ -1,0 +1,68 @@
+PROGRAM CalculadoraCompleta
+VAR
+    num1, num2, resultado : INT;
+    operacion : CHAR;
+
+FUNCTION Sumar(INT a, INT b): INT
+BEGIN
+    VAR
+        temp : INT;
+    temp := a + b;
+    Sumar := temp;
+END
+
+FUNCTION Restar(INT a, INT b): INT
+BEGIN
+    Restar := a - b;
+END
+
+FUNCTION Multiplicar(INT a, INT b): INT
+BEGIN
+    Multiplicar := a * b;
+END
+
+FUNCTION Dividir(INT a, INT b): INT
+BEGIN
+    Dividir := a DIV b;
+END
+
+PROCEDURE MostrarResultado(INT res)
+BEGIN
+    WRITE("El resultado es:", res);
+END
+
+BEGIN
+    WRITE("Ingrese primer numero:");
+    READ(num1);
+    
+    WRITE("Ingrese segundo numero:");
+    READ(num2);
+    
+    WRITE("Ingrese operacion (+, -, *, /):");
+    READ(operacion);
+    
+    IF operacion = '+' THEN
+    BEGIN
+        resultado := Sumar(num1, num2);
+    END
+    ELSE
+    BEGIN
+        IF operacion = '-' THEN
+        BEGIN
+            resultado := Restar(num1, num2);
+        END
+        ELSE
+        BEGIN
+            IF operacion = '*' THEN
+            BEGIN
+                resultado := Multiplicar(num1, num2);
+            END
+            ELSE
+            BEGIN
+                resultado := Dividir(num1, num2);
+            END
+        END
+    END
+    
+    MostrarResultado(resultado);
+END

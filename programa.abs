@@ -1,0 +1,54 @@
+PROGRAM EjemploCompleto
+{
+    Programa de ejemplo que demuestra las características del lenguaje ABS:
+    - Variables globales
+    - Funciones con parámetros y retorno
+    - Expresiones aritméticas
+    - Estructura IF-THEN-ELSE
+    - READ y WRITE
+}
+
+VAR
+    numero1, numero2 : INT;
+    resultado : INT;
+
+FUNCTION Sumar(INT a, INT b) : INT
+BEGIN
+    VAR
+        suma : INT;
+    suma := a + b;
+    Sumar := suma;
+END
+
+FUNCTION EsPositivo(INT x) : STRING
+BEGIN
+    VAR
+        respuesta : STRING;
+    
+    IF x > 0 THEN
+        BEGIN
+            respuesta := "Positivo";
+        END
+    ELSE
+        BEGIN
+            respuesta := "No positivo";
+        END
+    
+    EsPositivo := respuesta;
+END
+
+BEGIN
+    WRITE("=== Ejemplo de Compilador ABS ===");
+    WRITE("Ingrese el primer numero:");
+    READ(numero1);
+    
+    WRITE("Ingrese el segundo numero:");
+    READ(numero2);
+    
+    resultado := Sumar(numero1, numero2);
+    
+    WRITE("La suma de ", numero1, " + ", numero2, " = ", resultado);
+    WRITE("El resultado es: ", EsPositivo(resultado));
+    
+    WRITE("Programa finalizado exitosamente!");
+END

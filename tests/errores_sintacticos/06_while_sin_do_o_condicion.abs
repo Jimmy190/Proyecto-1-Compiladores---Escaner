@@ -1,0 +1,16 @@
+PROGRAM ErrorWHILE
+VAR
+    contador : INT;
+BEGIN
+    contador := 0;
+    
+    WHILE contador < 10
+    BEGIN
+        contador := contador + 1;
+    END
+    
+    WHILE DO
+    BEGIN
+        contador++;
+    END
+END

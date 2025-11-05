@@ -1,0 +1,9 @@
+PROGRAM ErrorNumeros
+VAR
+    real1, real2 : REAL;
+    entero : INT;
+BEGIN
+    real1 := 3.;
+    real2 := .14;
+    entero := 1.2.3;
+END

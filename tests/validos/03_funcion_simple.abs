@@ -4,7 +4,7 @@ VAR
 
 FUNCTION Sumar(INT a, INT b): INT
 BEGIN
-    Sumar := a + b;
+    Sumar := a + b
 END
 
 BEGIN

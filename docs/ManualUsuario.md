@@ -209,10 +209,10 @@ TODOS LOS TESTS PASARON EXITOSAMENTE!
 **Tiempo de ejecucion:** ~15-20 segundos
 
 **Ventajas del modo verbose:**
-- ✅ Revision completa en un solo comando
-- ✅ Ver todos los errores detectados
-- ✅ Verificar el comportamiento del compilador
-- ✅ Ideal para profesores y revisores
+-  Revision completa en un solo comando
+-  Ver todos los errores detectados
+-  Verificar el comportamiento del compilador
+-  Ideal para profesores y revisores
 
 ---
 
@@ -315,13 +315,13 @@ cat programa.abs
 ```
 
 Este programa de ejemplo incluye:
-- ✅ Variables globales (INT, STRING, REAL, CHAR)
-- ✅ Funciones con parametros y retorno
-- ✅ Procedimientos
-- ✅ Estructuras IF-THEN-ELSE
-- ✅ Operaciones READ y WRITE
-- ✅ Expresiones aritmeticas
-- ✅ Comentarios
+-  Variables globales (INT, STRING, REAL, CHAR)
+-  Funciones con parametros y retorno
+-  Procedimientos
+-  Estructuras IF-THEN-ELSE
+-  Operaciones READ y WRITE
+-  Expresiones aritmeticas
+-  Comentarios
 
 **Paso 2: Ejecutar el compilador**
 ```powershell
@@ -372,10 +372,10 @@ El codigo fuente es lexica y sintacticamente correcto
 ```
 
 **Interpretacion:**
-- ✅ No hay errores
-- ✅ Todos los tokens reconocidos correctamente
-- ✅ Programa complejo valido
-- ✅ Exit code: 0 (exito)
+-  No hay errores
+-  Todos los tokens reconocidos correctamente
+-  Programa complejo valido
+-  Exit code: 0 (exito)
 
 ---
 
@@ -431,15 +431,15 @@ SE ENCONTRARON ERRORES - REVISE LOS REPORTES ANTERIORES
 ```
 
 **Interpretacion:**
-- ⚠️ 3 errores lexicos detectados
-- ⚠️ El compilador continuo el analisis
-- ⚠️ Exit code: 1 (errores)
+-  3 errores lexicos detectados
+-  El compilador continuo el analisis
+-  Exit code: 1 (errores)
 
 **Reglas de identificadores:**
-- ✅ Deben empezar con letra
-- ❌ No pueden empezar con numero
-- ❌ No pueden empezar con `_` o simbolos especiales
-- ✅ Pueden contener letras, numeros despues del primer caracter
+-  Deben empezar con letra
+-  No pueden empezar con numero
+-  No pueden empezar con `_` o simbolos especiales
+-  Pueden contener letras, numeros despues del primer caracter
 
 ---
 
@@ -492,9 +492,9 @@ SE ENCONTRARON ERRORES - REVISE LOS REPORTES ANTERIORES
 ```
 
 **Interpretacion:**
-- ⚠️ 2 errores sintacticos detectados
-- ⚠️ Variables sin tipo declarado
-- ⚠️ Exit code: 1
+-  2 errores sintacticos detectados
+-  Variables sin tipo declarado
+-  Exit code: 1
 
 **Sintaxis correcta de variables:**
 ```pascal
@@ -1357,9 +1357,9 @@ El codigo fuente es lexica y sintacticamente correcto
 ```
 
 **Interpretacion:**
-- ✅ Exit code: 0 (exito)
-- ✅ Programa sintacticamente correcto
-- ✅ Todos los tokens reconocidos
+- Exit code: 0 (exito)
+- Programa sintacticamente correcto
+- Todos los tokens reconocidos
 
 ---
 
@@ -1392,10 +1392,10 @@ SE ENCONTRARON ERRORES - REVISE LOS REPORTES ANTERIORES
 ```
 
 **Interpretacion:**
-- ⚠️ Exit code: 1 (error)
-- ⚠️ 3 errores lexicos detectados
-- ⚠️ Cada error muestra: linea, columna, descripcion, texto
-- ✅ El analisis continuo hasta el final
+- Exit code: 1 (error)
+- 3 errores lexicos detectados
+- Cada error muestra: linea, columna, descripcion, texto
+- El analisis continuo hasta el final
 
 ---
 
@@ -1424,10 +1424,10 @@ SE ENCONTRARON ERRORES - REVISE LOS REPORTES ANTERIORES
 ```
 
 **Interpretacion:**
-- ⚠️ Exit code: 1 (error)
-- ⚠️ 2 errores sintacticos detectados
-- ⚠️ Cada error muestra ubicacion y descripcion
-- ✅ Recuperacion de errores activada
+- Exit code: 1 (error)
+- 2 errores sintacticos detectados
+- Cada error muestra ubicacion y descripcion
+- Recuperacion de errores activada
 
 ---
 
@@ -1551,8 +1551,8 @@ Test 01 : Programa minimo [FAIL]
 
 **Sintoma:**
 ```
-An�lisis completado
-Er��res encontrados
+Analisis completado
+Errores encontrados
 ```
 
 **Solucion:**

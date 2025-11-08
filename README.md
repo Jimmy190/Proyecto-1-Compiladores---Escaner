@@ -1,19 +1,19 @@
-# 🎓 Compilador ABS - Parser Léxico y Sintáctico
+# Compilador ABS - Parser Léxico y Sintáctico
 
 **Proyecto 1 - Compiladores**  
 **Lenguaje:** ABS (Abstract Block Structured Language)  
 **Herramientas:** JFlex 1.9.1 + CUP 11b  
-**Estado:** ✅ 100% Funcional
+**Estado:**  100% Funcional
 
 ---
 
-## 📋 DESCRIPCIÓN
+## DESCRIPCIÓN
 
 Compilador para el lenguaje ABS que realiza análisis léxico y sintáctico completo con detección y recuperación de errores.
 
 ---
 
-## 🚀 INICIO RÁPIDO
+## INICIO RÁPIDO
 
 ### **1. Compilar el Proyecto**
 ```powershell
@@ -33,7 +33,7 @@ java -cp "bin;lib\*" main.Main programa.abs
 
 ---
 
-## 📁 ESTRUCTURA DEL PROYECTO
+## ESTRUCTURA DEL PROYECTO
 
 ```
 Proyecto-1-Compiladores---Escaner/
@@ -60,7 +60,7 @@ Proyecto-1-Compiladores---Escaner/
 
 ---
 
-## 🔧 COMPILACIÓN MANUAL (Paso a Paso)
+## COMPILACIÓN MANUAL (Paso a Paso)
 
 Si no puedes usar `compile.ps1`, compila manualmente:
 
@@ -84,7 +84,7 @@ javac -cp "lib\java-cup-11b-runtime.jar;bin" -d bin src\main\Main.java
 
 ---
 
-## 📖 CARACTERÍSTICAS DEL LENGUAJE ABS
+## CARACTERÍSTICAS DEL LENGUAJE ABS
 
 ### **Estructura de un Programa**
 ```pascal
@@ -128,18 +128,18 @@ END
 
 ---
 
-## 📊 ESTADO DEL PROYECTO
+## ESTADO DEL PROYECTO
 
 | Componente | Estado |
 |-----------|--------|
-| Scanner (Léxico) | ✅ 100% |
-| Parser (Sintáctico) | ✅ 100% |
-| Manejo de Errores | ✅ 100% |
-| Casos de Prueba | ✅ 26/26 (100%) |
+| Scanner (Léxico) | 100% |
+| Parser (Sintáctico) | 100% |
+| Manejo de Errores | 100% |
+| Casos de Prueba | 26/26 (100%) |
 
 ---
 
-## 🛠️ REQUISITOS
+## REQUISITOS
 
 - Java JDK 8+
 - PowerShell 5.1+
@@ -147,11 +147,11 @@ END
 
 ---
 
-## 🐛 SOLUCIÓN DE PROBLEMAS
+## SOLUCIÓN DE PROBLEMAS
 
 Ver: `docs/ManualUsuario.md` (Sección 7)
 
 ---
 
 **Última actualización:** Noviembre 4, 2025  
-**Estado:** ✅ Compilador 100% funcional
+**Estado:** Compilador 100% funcional

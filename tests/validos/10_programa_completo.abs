@@ -8,22 +8,22 @@ BEGIN
     VAR
         temp : INT;
     temp := a + b;
-    Sumar := temp;
+    Sumar := temp
 END
 
 FUNCTION Restar(INT a, INT b): INT
 BEGIN
-    Restar := a - b;
+    Restar := a - b
 END
 
 FUNCTION Multiplicar(INT a, INT b): INT
 BEGIN
-    Multiplicar := a * b;
+    Multiplicar := a * b
 END
 
 FUNCTION Dividir(INT a, INT b): INT
 BEGIN
-    Dividir := a DIV b;
+    Dividir := a DIV b
 END
 
 PROCEDURE MostrarResultado(INT res)

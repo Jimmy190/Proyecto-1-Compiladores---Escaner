@@ -33,10 +33,8 @@ parser code {:
             }
         } else {
             String errorMsg = "Error sintactico: " + message;
-            if (!erroresSintacticos.contains(errorMsg)) {
-                erroresSintacticos.add(errorMsg);
-                errorCount++;
-            }
+            erroresSintacticos.add(errorMsg);
+            errorCount++;
         }
     }
     
@@ -71,6 +69,7 @@ parser code {:
         );
         report_error(errorMsg, s);
     }
+
 :}
 
 /* ========== TODOS LOS TERMINALES DEL JFLEX ========== */
@@ -225,6 +224,8 @@ funcion_global ::= FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_D
                    {: parser.report_error("Falta ':' antes del tipo de retorno de funcion", null); :}
                  | FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS error cuerpo_funcion
                    {: parser.report_error("Tipo de retorno invalido en funcion. Use: INT, REAL, STRING o CHAR", null); :}
+                 | FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER error cuerpo_funcion
+                   {: parser.report_error("Falta ':' y tipo de retorno en declaracion de funcion", null); :}
                  | FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS tipo error END
                    {: parser.report_error("Falta BEGIN en cuerpo de funcion", null); :}
                  | FUNCTION error cuerpo_funcion
@@ -246,13 +247,25 @@ bloque_funcion ::= VAR lista_declaraciones_globales sentencias retorno
                  | VAR lista_declaraciones_globales retorno
                  | sentencias retorno
                  | retorno
+                 | VAR lista_declaraciones_globales sentencias error
+                   {: parser.report_error("Falta RETURN en cuerpo de funcion", null); :}
+                 | VAR lista_declaraciones_globales error 
+                    {: parser.report_error("Falta RETURN en cuerpo de funcion", null); :}
+                 | sentencias error
+                   {: parser.report_error("Falta RETURN en cuerpo de funcion", null); :}
+                 | error 
+                   {: parser.report_error("Falta RETURN en cuerpo de funcion", null); :}
                  ;
 
-retorno ::= IDENTIFICADOR ASIGNACION expresion PUNTO_COMA
+retorno ::= IDENTIFICADOR ASIGNACION expresion //PUNTO_COMA
           ;
 
 /* ========== PROCEDURE ========== */
-procedure_global ::= PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER cuerpo_procedure
+procedure_global ::= PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS error tipo cuerpo_procedure
+                     {: parser.report_error("Un procedimiento no debe tener tipo de retorno. Use FUNCTION si requiere devolver un valor", null); :}
+                   | PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS error cuerpo_procedure
+                     {: parser.report_error("Un procedimiento no debe tener tipo de retorno. Use FUNCTION si requiere devolver un valor", null); :}
+                   | PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER cuerpo_procedure
                    | PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros error cuerpo_procedure
                      {: parser.report_error("Falta ')' en declaracion de parametros de procedimiento", null); :}
                    | PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER error END
@@ -264,7 +277,15 @@ procedure_global ::= PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESI
 cuerpo_procedure ::= BEGIN bloque_procedure END
                    ;
 
-bloque_procedure ::= VAR lista_declaraciones_globales sentencias
+bloque_procedure ::= VAR lista_declaraciones_globales sentencias retorno error
+                     {: parser.report_error("Un procedimiento no debe contener sentencia RETURN. Use FUNCTION si desea devolver un valor", null); :}
+                   | VAR lista_declaraciones_globales retorno error
+                     {: parser.report_error("Un procedimiento no debe contener sentencia RETURN. Use FUNCTION si desea devolver un valor", null); :} 
+                   | sentencias retorno error
+                     {: parser.report_error("Un procedimiento no debe contener sentencia RETURN. Use FUNCTION si desea devolver un valor", null); :}
+                   | retorno error
+                     {: parser.report_error("Un procedimiento no debe contener sentencia RETURN. Use FUNCTION si desea devolver un valor", null); :}
+                   | VAR lista_declaraciones_globales sentencias
                    | VAR lista_declaraciones_globales
                    | sentencias
                    | /* vacío */
@@ -289,6 +310,14 @@ sentencia ::= IDENTIFICADOR ASIGNACION expresion PUNTO_COMA
 /* ========== Cuerpo del Main ========== */
 cuerpo_main ::= BEGIN sentencias_main END
               | BEGIN END
+              | error sentencias_main END
+                {: parser.report_error("Error en el cuerpo del programa principal", null); :}
+              | error END
+                {: parser.report_error("Error en el cuerpo del programa principal", null); :}
+              | BEGIN sentencias_main error
+                {: parser.report_error("Error en el cuerpo del programa principal", null); :}
+              | BEGIN error
+                {: parser.report_error("Error en el cuerpo del programa principal", null); :}
               ;
 
 sentencias_main ::= sentencia_main
@@ -399,17 +428,23 @@ if_stmt ::= IF condicion THEN BEGIN sentencias_main END
           ;
 
 /* ========== READ Y WRITE ========== */
-read_stmt ::= READ PARENTESIS_IZQ PARENTESIS_DER PUNTO_COMA
+read_stmt ::=
+              READ PARENTESIS_IZQ PARENTESIS_DER PUNTO_COMA
             | READ PARENTESIS_IZQ IDENTIFICADOR PARENTESIS_DER PUNTO_COMA
+            | READ PARENTESIS_IZQ IDENTIFICADOR COMA error PARENTESIS_DER PUNTO_COMA
+                {: parser.report_error("Error: 'READ' solo acepta una variable. Formato correcto: READ(variable);", null); :}
             | READ PARENTESIS_IZQ error PARENTESIS_DER PUNTO_COMA
-              {: parser.report_error("Argumento invalido en READ. Use un identificador de variable", null); :}
+                {: parser.report_error("Argumento inválido en READ. Use un identificador de variable", null); :}
             | READ error PUNTO_COMA
-              {: parser.report_error("Falta '(' despues de READ. Formato: 'READ();' o 'READ(variable);'", null); :}
+                {: parser.report_error("Falta '(' después de READ. Formato: 'READ();' o 'READ(variable);'", null); :}
+            | READ PARENTESIS_IZQ IDENTIFICADOR error PUNTO_COMA
+                {: parser.report_error("Falta ')' después del identificador en READ", null); :}
             ;
+
 
 write_stmt ::= WRITE PARENTESIS_IZQ lista_expresiones PARENTESIS_DER PUNTO_COMA
              | WRITE PARENTESIS_IZQ error PARENTESIS_DER PUNTO_COMA
-               {: parser.report_error("Expresion invalida en WRITE. Use expresiones, variables o literales", null); :}
+               {: parser.report_error("Expresion invalida en WRITE, debe tener por lo menos un parametro. Use expresiones, variables o literales", null); :}
              | WRITE error PUNTO_COMA
                {: parser.report_error("Falta '(' despues de WRITE. Formato: 'WRITE(exp1, exp2, ...);'", null); :}
              ;

@@ -395,11 +395,11 @@ estructura_control ::= while_stmt
 
 while_stmt ::= WHILE condicion DO BEGIN sentencias_main END
              | WHILE condicion error BEGIN sentencias_main END
-               {: parser.report_error("Falta DO en estructura WHILE. Formato: 'WHILE condicion DO BEGIN ... END'", null); :}
+               {: parser.report_error("Error en la estructura del WHILE", null); :}
              | WHILE condicion DO error END
-               {: parser.report_error("Falta BEGIN en cuerpo de WHILE", null); :}
+               {: parser.report_error("Error en la estructura del WHILE", null); :}
              | WHILE error DO BEGIN sentencias_main END
-               {: parser.report_error("Condicion invalida en WHILE. Debe ser una expresion booleana", null); :}
+               {: parser.report_error("Error en la estructura del WHILE", null); :}
              ;
 
 for_stmt ::= FOR IDENTIFICADOR ASIGNACION expresion TO expresion DO BEGIN sentencias_main END
@@ -417,14 +417,16 @@ for_stmt ::= FOR IDENTIFICADOR ASIGNACION expresion TO expresion DO BEGIN senten
 
 if_stmt ::= IF condicion THEN BEGIN sentencias_main END
           | IF condicion THEN BEGIN sentencias_main END ELSE BEGIN sentencias_main END
-          | IF condicion error BEGIN sentencias_main END
-            {: parser.report_error("Falta THEN en estructura IF. Formato: 'IF condicion THEN BEGIN ... END'", null); :}
-          | IF condicion THEN error END
-            {: parser.report_error("Falta BEGIN en cuerpo de IF", null); :}
-          | IF condicion THEN BEGIN sentencias_main END ELSE error END
-            {: parser.report_error("Falta BEGIN en cuerpo de ELSE", null); :}
-          | IF error THEN BEGIN sentencias_main END
-            {: parser.report_error("Condicion invalida en IF. Debe ser una expresion booleana", null); :}
+          | IF error BEGIN sentencias_main END
+            {: parser.report_error("Error en la estructura del IF", null); :}
+          | IF condicion THEN error sentencias_main END
+            {: parser.report_error("Error en la estructura del IF", null); :}
+          | IF condicion THEN BEGIN sentencias_main error
+            {: parser.report_error("Error en la estructura del IF", null); :}
+          | IF condicion THEN BEGIN sentencias_main END ELSE BEGIN error END
+            {: parser.report_error("Error en la estructura del IF ELSE", null); :}
+          | IF condicion THEN BEGIN sentencias_main END ELSE error sentencias_main END
+            {: parser.report_error("Error en la estructura del IF ELSE", null); :}
           ;
 
 /* ========== READ Y WRITE ========== */

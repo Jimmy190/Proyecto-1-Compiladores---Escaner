@@ -240,17 +240,12 @@ mas_parametros ::= COMA tipo IDENTIFICADOR mas_parametros
                  | /* epsilon */
                  ;
 
-cuerpo_funcion ::= BEGIN bloque_funcion END
+cuerpo_funcion ::= BEGIN bloque_funcion END 
+                  | VAR lista_declaraciones_globales BEGIN bloque_funcion END
                  ;
 
-bloque_funcion ::= VAR lista_declaraciones_globales sentencias retorno
-                 | VAR lista_declaraciones_globales retorno
-                 | sentencias retorno
+bloque_funcion ::= sentencias retorno
                  | retorno
-                 | VAR lista_declaraciones_globales sentencias error
-                   {: parser.report_error("Falta RETURN en cuerpo de funcion", null); :}
-                 | VAR lista_declaraciones_globales error 
-                    {: parser.report_error("Falta RETURN en cuerpo de funcion", null); :}
                  | sentencias error
                    {: parser.report_error("Falta RETURN en cuerpo de funcion", null); :}
                  | error 
@@ -275,18 +270,13 @@ procedure_global ::= PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESI
                    ;
 
 cuerpo_procedure ::= BEGIN bloque_procedure END
+                    | VAR lista_declaraciones_globales BEGIN bloque_procedure END
                    ;
 
-bloque_procedure ::= VAR lista_declaraciones_globales sentencias retorno error
-                     {: parser.report_error("Un procedimiento no debe contener sentencia RETURN. Use FUNCTION si desea devolver un valor", null); :}
-                   | VAR lista_declaraciones_globales retorno error
-                     {: parser.report_error("Un procedimiento no debe contener sentencia RETURN. Use FUNCTION si desea devolver un valor", null); :} 
-                   | sentencias retorno error
+bloque_procedure ::= sentencias retorno error
                      {: parser.report_error("Un procedimiento no debe contener sentencia RETURN. Use FUNCTION si desea devolver un valor", null); :}
                    | retorno error
                      {: parser.report_error("Un procedimiento no debe contener sentencia RETURN. Use FUNCTION si desea devolver un valor", null); :}
-                   | VAR lista_declaraciones_globales sentencias
-                   | VAR lista_declaraciones_globales
                    | sentencias
                    | /* vacío */
                    ;
@@ -331,6 +321,8 @@ sentencia_main ::= IDENTIFICADOR ASIGNACION expresion PUNTO_COMA
                  | write_stmt
                  | IDENTIFICADOR INCREMENTO PUNTO_COMA
                  | IDENTIFICADOR DECREMENTO PUNTO_COMA
+                 | funcion_global
+                 | procedure_global
                  | error PUNTO_COMA
                    {: parser.report_error("Error en sentencia del programa principal", null); :}
                  ;

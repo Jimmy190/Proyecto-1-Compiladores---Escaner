@@ -17,7 +17,7 @@ BEGIN
     VAR
         suma : INT;
     suma := a + b;
-    Sumar := suma;
+    Sumar := suma
 END
 
 FUNCTION EsPositivo(INT x) : STRING
@@ -34,7 +34,7 @@ BEGIN
             respuesta := "No positivo";
         END
     
-    EsPositivo := respuesta;
+    EsPositivo := respuesta
 END
 
 BEGIN

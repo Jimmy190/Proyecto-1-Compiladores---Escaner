@@ -1,0 +1,29 @@
+PROGRAM ErrorFuncion
+
+FUNCTION Sumar(INT a, INT b): INT
+BEGIN
+    Sumar := a + b
+END
+
+FUNCTION Sumar(INT a, INT b): INT
+    VAR
+        x, y : INT;
+        nombre : STRING;
+        edad : INT;
+        contador : INT;
+    BEGIN
+        Sumar := a + b
+    END
+
+PROCEDURE Imprimir(STRING texto, INT edad)
+    VAR
+        x, y : INT;
+        nombre : STRING;
+        edad : INT;
+        contador : INT;
+    BEGIN
+        WRITE(texto);
+    END
+
+BEGIN
+END

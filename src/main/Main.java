@@ -2,9 +2,11 @@ package main;
 import java_cup.runtime.*;
 import lexer.Scanner;
 import parser.Parser;
+import semantic.*;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
@@ -30,13 +32,13 @@ public class Main {
             System.out.println();
 
             // Ejecutar el analisis sintactico con CUP
-            System.out.println("EJECUTANDO ANALISIS SINTACTICO...");
+            System.out.println("EJECUTANDO ANALISIS SINTACTICO Y SEMANTICO...");
             System.out.println("(El analisis continuara a pesar de errores)");
             System.out.println("---------------------------------------------------");
             
             try {
-                Symbol resultado = parser.parse();
-                System.out.println("ANALISIS SINTACTICO COMPLETADO");
+                java_cup.runtime.Symbol resultado = parser.parse();
+                System.out.println("ANALISIS SINTACTICO Y SEMANTICO COMPLETADOS");
             } catch (Exception e) {
                 System.out.println("EL ANALISIS ENCONTRO ERRORES PERO CONTINUO");
             }
@@ -46,6 +48,12 @@ public class Main {
             
             // Obtener errores sintacticos del parser
             ArrayList<String> erroresSintacticos = parser.getErroresSintacticos();
+            
+            // Obtener errores semanticos del analizador semantico
+            SemanticAnalyzer semanticAnalyzer = parser.getSemanticAnalyzer();
+            List<SemanticError> erroresSemanticos = (semanticAnalyzer != null) ? 
+                                                    semanticAnalyzer.getErrors() : 
+                                                    new ArrayList<>();
 
             // ========== REPORTE DE ERRORES LEXICOS ==========
             System.out.println("\n" + "=".repeat(60));
@@ -77,6 +85,29 @@ public class Main {
                 System.out.println("No se encontraron errores sintacticos");
             }
 
+            // ========== REPORTE DE ERRORES SEMANTICOS ==========
+            System.out.println("\n" + "=".repeat(60));
+            System.out.println("              ERRORES SEMANTICOS ENCONTRADOS");
+            System.out.println("=".repeat(60));
+            
+            if (!erroresSemanticos.isEmpty()) {
+                System.out.println("Se encontraron " + erroresSemanticos.size() + " error(es) semantico(s):");
+                System.out.println("-".repeat(60));
+                for (int i = 0; i < erroresSemanticos.size(); i++) {
+                    System.out.println((i + 1) + ". " + erroresSemanticos.get(i).format());
+                }
+            } else {
+                System.out.println("No se encontraron errores semanticos");
+            }
+
+            // ========== TABLA DE SIMBOLOS ==========
+            if (semanticAnalyzer != null) {
+                System.out.println("\n" + "=".repeat(100));
+                System.out.println("                                    TABLA DE SÍMBOLOS");
+                System.out.println("=".repeat(100));
+                semanticAnalyzer.printSymbolTableSummary();
+            }
+
             // ========== TABLA DE TOKENS ACEPTADOS ==========
             System.out.println("\n" + "=".repeat(60));
             System.out.println("                TOKENS ACEPTADOS");
@@ -88,15 +119,16 @@ public class Main {
             System.out.println("                     RESUMEN");
             System.out.println("=".repeat(60));
             
-            int totalErrores = erroresLexicos.size() + erroresSintacticos.size();
+            int totalErrores = erroresLexicos.size() + erroresSintacticos.size() + erroresSemanticos.size();
             
             System.out.println("Total de errores lexicos: " + erroresLexicos.size());
             System.out.println("Total de errores sintacticos: " + erroresSintacticos.size());
+            System.out.println("Total de errores semanticos: " + erroresSemanticos.size());
             System.out.println("Total de errores: " + totalErrores);
             
             if (totalErrores == 0) {
                 System.out.println("\nANALISIS COMPLETADO EXITOSAMENTE!");
-                System.out.println("El codigo fuente es lexica y sintacticamente correcto");
+                System.out.println("El codigo fuente es lexica, sintactica y semanticamente correcto");
                 System.exit(0);  // Exit code 0: exito
             } else {
                 System.out.println("\nSE ENCONTRARON ERRORES - REVISE LOS REPORTES ANTERIORES");

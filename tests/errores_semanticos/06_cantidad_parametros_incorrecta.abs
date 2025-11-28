@@ -1,0 +1,23 @@
+{ Test: Cantidad incorrecta de parámetros en llamada a función }
+PROGRAM TestParametrosIncorrectos
+VAR
+    resultado : INT;
+
+FUNCTION suma(INT a, INT b): INT
+BEGIN
+    suma := a + b
+END
+
+PROCEDURE imprimir(INT valor)
+BEGIN
+    WRITE(valor)
+END
+
+BEGIN
+    { Errores: número de argumentos }
+    resultado := suma(5);              { ERROR: falta 1 argumento }
+    resultado := suma(5, 10, 15);      { ERROR: sobran argumentos }
+    
+    imprimir();                         { ERROR: falta argumento }
+    imprimir(10, 20)                    { ERROR: sobran argumentos }
+END.

@@ -1,0 +1,21 @@
+{ Test: Tipos incorrectos en parámetros de función }
+PROGRAM TestTiposParametrosIncorrectos
+VAR
+    resultado : INT;
+
+FUNCTION multiplicar(INT a, INT b): INT
+BEGIN
+    multiplicar := a * b
+END
+
+FUNCTION convertir(STRING texto): INT
+BEGIN
+    convertir := 0
+END
+
+BEGIN
+    { Errores: tipos de argumentos }
+    resultado := multiplicar(5, "hola");        { ERROR: argumento 2 debe ser INT }
+    resultado := multiplicar(3.14, 10);         { ERROR: argumento 1 debe ser INT }
+    resultado := convertir(123)                 { ERROR: argumento debe ser STRING }
+END.

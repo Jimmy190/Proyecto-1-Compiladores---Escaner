@@ -128,10 +128,10 @@ private Symbol crearSymbol(int symType, String token, String tipoToken) {
                 ", comentario '(*' sin cerrar. Texto: " + yytext());
 }
 {Comentario1} {
-    registrarToken(yytext(), "COMENTARIO");
+    /* Ignorar comentarios */
 }
 {Comentario2} {
-    registrarToken(yytext(), "COMENTARIO");
+    /* Ignorar comentarios */
 }
 
 // Ignorar espacios y saltos de línea

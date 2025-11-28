@@ -1662,7 +1662,7 @@ private Symbol crearSymbol(int symType, String token, String tipoToken) {
           // fall through
           case 144: break;
           case 43:
-            { registrarToken(yytext(), "COMENTARIO");
+            { /* Ignorar comentarios */
             }
           // fall through
           case 145: break;

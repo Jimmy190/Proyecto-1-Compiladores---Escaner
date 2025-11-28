@@ -1,9 +1,0 @@
-PROGRAM TestFOR
-VAR
-    i : INT;
-BEGIN
-    FOR i := 1 TO 10 DO
-    BEGIN
-        WRITE(i);
-    END
-END

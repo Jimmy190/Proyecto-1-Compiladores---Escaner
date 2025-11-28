@@ -2,6 +2,7 @@
 package parser;
 import java_cup.runtime.*;
 import java.util.ArrayList;
+import semantic.*;
 
 parser code {:
     // Lista para almacenar errores sintacticos
@@ -9,8 +10,15 @@ parser code {:
     private int errorCount = 0;
     private static final int MAX_ERRORS = 50; // Limite de errores antes de abortar
     
+    // Analizador semantico
+    private SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
+    
     public ArrayList<String> getErroresSintacticos() {
         return erroresSintacticos;
+    }
+    
+    public SemanticAnalyzer getSemanticAnalyzer() {
+        return semanticAnalyzer;
     }
     
     // Metodo mejorado para reportar errores sintacticos con contexto
@@ -19,8 +27,8 @@ parser code {:
             return; // Evitar reportar demasiados errores
         }
         
-        if (info instanceof Symbol) {
-            Symbol s = (Symbol)info;
+        if (info instanceof java_cup.runtime.Symbol) {
+            java_cup.runtime.Symbol s = (java_cup.runtime.Symbol)info;
             int line = (s.left >= 0 ? s.left + 1 : 1);
             int column = (s.right >= 0 ? s.right + 1 : 1);
             
@@ -43,7 +51,7 @@ parser code {:
     }
     
     // Metodo mejorado con mensajes mas descriptivos
-    public void syntax_error(Symbol cur_token) {
+    public void syntax_error(java_cup.runtime.Symbol cur_token) {
         String tokenValue = (cur_token.value != null ? cur_token.value.toString() : "fin de archivo");
         String errorMsg = String.format(
             "Token inesperado '%s'. Verifique la sintaxis del programa", 
@@ -52,7 +60,7 @@ parser code {:
         report_error(errorMsg, cur_token);
     }
     
-    public void unrecovered_syntax_error(Symbol cur_token) {
+    public void unrecovered_syntax_error(java_cup.runtime.Symbol cur_token) {
         String tokenValue = (cur_token.value != null ? cur_token.value.toString() : "fin de archivo");
         String errorMsg = String.format(
             "Error de sintaxis irrecuperable en '%s'. El analisis no puede continuar desde este punto", 
@@ -62,7 +70,7 @@ parser code {:
     }
     
     // Metodo auxiliar para reportar errores especificos
-    public void reportarErrorEspecifico(String contexto, String esperado, String encontrado, Symbol s) {
+    public void reportarErrorEspecifico(String contexto, String esperado, String encontrado, java_cup.runtime.Symbol s) {
         String errorMsg = String.format(
             "%s: Se esperaba %s, pero se encontro '%s'",
             contexto, esperado, encontrado
@@ -96,6 +104,16 @@ terminal
     IDENTIFICADOR;
 
 /* ========== REGLAS DE PRODUCCION - NON TERMINALS ========== */
+non terminal String tipo;
+non terminal java.util.ArrayList<String> lista_identificadores, mas_identificadores;
+non terminal init_program;  // Para inicializar análisis semántico
+non terminal java.util.ArrayList<String[]> parametros, mas_parametros;  // Array de [tipo, nombre]
+non terminal java.util.ArrayList<String> lista_expresiones_tipos, mas_expresiones_tipos;  // Tipos de expresiones en llamadas
+non terminal java.util.ArrayList<String> lista_expresiones, mas_expresiones;  // Tipos de expresiones en llamadas a funciones
+
+// Expresiones y llamadas devuelven String con el tipo de dato resultante
+non terminal String expresion, termino, factor, llamada_funcion;
+
 non terminal
     // Estructura del Programa
     inicio,
@@ -105,15 +123,11 @@ non terminal
     variables_globales,
     lista_declaraciones_globales,
     declaracion_variable_global,
-    lista_identificadores,
-    mas_identificadores,
     
     // Declaracion de Funciones y Procedures
     funciones_globales,
     funcion_global,
     procedure_global,
-    parametros,
-    mas_parametros,
     cuerpo_funcion,
     cuerpo_procedure,
     bloque_funcion,
@@ -125,11 +139,6 @@ non terminal
     sentencia,
     sentencias_main,
     sentencia_main,
-    
-    // Expresiones Aritmeticas
-    expresion,
-    termino,
-    factor,
     
     // Expresiones Booleanas (Condiciones)
     condicion,
@@ -145,17 +154,10 @@ non terminal
     
     // READ y WRITE
     read_stmt,
-    write_stmt,
+    write_stmt;
     
-    // Llamadas a funciones
-    llamada_funcion,
-    lista_expresiones,
-    mas_expresiones,
-    
-    // Tipos de datos
-    tipo,
-    
-    // Main
+    // Main ya no lista llamada_funcion aquí
+non terminal    
     cuerpo_main;
 
 /* ========== PRECEDENCIAS DE OPERADORES ========== */
@@ -179,13 +181,25 @@ start with inicio;
 inicio ::= programa;
 
 /* ========== Estructura del Programa ========== */
-programa ::= PROGRAM IDENTIFICADOR variables_globales funciones_globales cuerpo_main
-           | PROGRAM IDENTIFICADOR variables_globales funciones_globales cuerpo_main PUNTO
+programa ::= PROGRAM IDENTIFICADOR:name init_program variables_globales funciones_globales cuerpo_main
+           | PROGRAM IDENTIFICADOR:name init_program variables_globales funciones_globales cuerpo_main PUNTO
+             {:
+                parser.semanticAnalyzer.endProgram();
+             :}
            | PROGRAM error variables_globales funciones_globales cuerpo_main
              {: parser.report_error("Falta el nombre del programa despues de PROGRAM", null); :}
            | error
              {: parser.report_error("Falta palabra clave PROGRAM al inicio del archivo", null); :}
            ;
+
+// Producción auxiliar para inicializar el análisis semántico
+init_program ::= /* epsilon */
+               {:
+                   // Obtener el nombre del programa del token previo
+                   // Como no podemos acceder directamente, usamos null por ahora
+                   parser.semanticAnalyzer.beginProgram("PROGRAM");
+               :}
+               ;
 
 /* ========== Declaracion de Variables Globales ========== */
 variables_globales ::= VAR lista_declaraciones_globales
@@ -196,18 +210,46 @@ lista_declaraciones_globales ::= declaracion_variable_global
                                 | lista_declaraciones_globales declaracion_variable_global
                                 ;
 
-declaracion_variable_global ::= lista_identificadores DOS_PUNTOS tipo PUNTO_COMA
+declaracion_variable_global ::= lista_identificadores:ids DOS_PUNTOS tipo:t PUNTO_COMA
+                               {:
+                                   // Declarar cada variable en la tabla de símbolos
+                                   for (String id : ids) {
+                                       parser.semanticAnalyzer.declareVariable(
+                                           id, 
+                                           t, 
+                                           idsleft + 1,  // línea
+                                           idsright + 1  // columna
+                                       );
+                                   }
+                               :}
                                | lista_identificadores DOS_PUNTOS error PUNTO_COMA
                                  {: parser.report_error("Tipo de dato invalido o faltante en declaracion de variable. Use: INT, REAL, STRING o CHAR", null); :}
                                | lista_identificadores error tipo PUNTO_COMA
                                  {: parser.report_error("Falta ':' en declaracion de variable. Formato correcto: 'variable : TIPO;'", null); :}
                                ;
 
-lista_identificadores ::= IDENTIFICADOR mas_identificadores
+lista_identificadores ::= IDENTIFICADOR:id mas_identificadores:resto
+                        {:
+                            java.util.ArrayList<String> lista = new java.util.ArrayList<>();
+                            lista.add((String)id);
+                            if (resto != null) {
+                                lista.addAll(resto);
+                            }
+                            RESULT = lista;
+                        :}
                         ;
 
-mas_identificadores ::= COMA IDENTIFICADOR mas_identificadores
+mas_identificadores ::= COMA IDENTIFICADOR:id mas_identificadores:resto
+                      {:
+                          java.util.ArrayList<String> lista = new java.util.ArrayList<>();
+                          lista.add((String)id);
+                          if (resto != null) {
+                              lista.addAll(resto);
+                          }
+                          RESULT = lista;
+                      :}
                       | /* vacío */
+                      {: RESULT = null; :}
                       ;
 
 /* ========== Declaracion de Funciones y Procedures ========== */
@@ -217,7 +259,34 @@ funciones_globales ::= funcion_global funciones_globales
                      ;
 
 /* ========== FUNCTION ========== */
-funcion_global ::= FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS tipo cuerpo_funcion
+funcion_global ::= FUNCTION IDENTIFICADOR:name PARENTESIS_IZQ parametros:params PARENTESIS_DER DOS_PUNTOS tipo:t 
+                   {: 
+                       // Declarar función (esto crea el scope)
+                       parser.semanticAnalyzer.declareFunction(
+                           (String)name,
+                           t,
+                           nameleft + 1,
+                           nameright + 1
+                       );
+                       
+                       // Agregar parámetros al scope de la función
+                       if (params != null) {
+                           for (String[] param : params) {
+                               // param[0]=tipo, param[1]=nombre
+                               parser.semanticAnalyzer.addParameter(
+                                   param[1], 
+                                   param[0], 
+                                   nameleft + 1, 
+                                   nameright + 1
+                               );
+                           }
+                       }
+                   :}
+                   cuerpo_funcion
+                   {:
+                       // Finalizar ámbito de la función
+                       parser.semanticAnalyzer.endFunctionDeclaration();
+                   :}
                  | FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros error DOS_PUNTOS tipo cuerpo_funcion
                    {: parser.report_error("Falta ')' en declaracion de parametros de funcion", null); :}
                  | FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER error tipo cuerpo_funcion
@@ -232,12 +301,30 @@ funcion_global ::= FUNCTION IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_D
                    {: parser.report_error("Error en declaracion de funcion. Formato: 'FUNCTION nombre(parametros): TIPO BEGIN ... END'", null); :}
                  ;
 
-parametros ::= tipo IDENTIFICADOR mas_parametros
+parametros ::= tipo:t IDENTIFICADOR:id mas_parametros:resto
+             {:
+                 java.util.ArrayList<String[]> lista = new java.util.ArrayList<>();
+                 lista.add(new String[]{(String)t, (String)id});
+                 if (resto != null) {
+                     lista.addAll(resto);
+                 }
+                 RESULT = lista;
+             :}
              | /* epsilon */
+             {: RESULT = null; :}
              ;
 
-mas_parametros ::= COMA tipo IDENTIFICADOR mas_parametros
+mas_parametros ::= COMA tipo:t IDENTIFICADOR:id mas_parametros:resto
+                 {:
+                     java.util.ArrayList<String[]> lista = new java.util.ArrayList<>();
+                     lista.add(new String[]{(String)t, (String)id});
+                     if (resto != null) {
+                         lista.addAll(resto);
+                     }
+                     RESULT = lista;
+                 :}
                  | /* epsilon */
+                 {: RESULT = null; :}
                  ;
 
 cuerpo_funcion ::= BEGIN bloque_funcion END 
@@ -252,15 +339,50 @@ bloque_funcion ::= sentencias retorno
                    {: parser.report_error("Falta RETURN en cuerpo de funcion", null); :}
                  ;
 
-retorno ::= IDENTIFICADOR ASIGNACION expresion //PUNTO_COMA
+retorno ::= IDENTIFICADOR:fname ASIGNACION expresion:exprType //PUNTO_COMA
+          {:
+              // Verificar que el tipo de retorno coincida con el tipo de la función
+              parser.semanticAnalyzer.checkReturnStatement(
+                  (String)fname,
+                  exprType,
+                  fnameleft + 1,
+                  fnameright + 1
+              );
+          :}
           ;
 
 /* ========== PROCEDURE ========== */
-procedure_global ::= PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS error tipo cuerpo_procedure
+procedure_global ::= PROCEDURE IDENTIFICADOR:name PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS error tipo cuerpo_procedure
                      {: parser.report_error("Un procedimiento no debe tener tipo de retorno. Use FUNCTION si requiere devolver un valor", null); :}
-                   | PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS error cuerpo_procedure
+                   | PROCEDURE IDENTIFICADOR:name PARENTESIS_IZQ parametros PARENTESIS_DER DOS_PUNTOS error cuerpo_procedure
                      {: parser.report_error("Un procedimiento no debe tener tipo de retorno. Use FUNCTION si requiere devolver un valor", null); :}
-                   | PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER cuerpo_procedure
+                   | PROCEDURE IDENTIFICADOR:name PARENTESIS_IZQ parametros:params PARENTESIS_DER 
+                   {:
+                       // Declarar procedimiento (esto crea el scope)
+                       parser.semanticAnalyzer.declareProcedure(
+                           (String)name,
+                           nameleft + 1,
+                           nameright + 1
+                       );
+                       
+                       // Agregar parámetros al scope del procedimiento
+                       if (params != null) {
+                           for (String[] param : params) {
+                               // param[0]=tipo, param[1]=nombre
+                               parser.semanticAnalyzer.addParameter(
+                                   param[1], 
+                                   param[0], 
+                                   nameleft + 1, 
+                                   nameright + 1
+                               );
+                           }
+                       }
+                   :}
+                   cuerpo_procedure
+                   {:
+                       // Finalizar ámbito del procedimiento
+                       parser.semanticAnalyzer.endFunctionDeclaration();
+                   :}
                    | PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros error cuerpo_procedure
                      {: parser.report_error("Falta ')' en declaracion de parametros de procedimiento", null); :}
                    | PROCEDURE IDENTIFICADOR PARENTESIS_IZQ parametros PARENTESIS_DER error END
@@ -286,13 +408,40 @@ sentencias ::= sentencia
              | sentencias sentencia
              ;
 
-sentencia ::= IDENTIFICADOR ASIGNACION expresion PUNTO_COMA
+sentencia ::= IDENTIFICADOR:id ASIGNACION expresion:exprType PUNTO_COMA
+            {:
+                // Verificar asignación con compatibilidad de tipos
+                parser.semanticAnalyzer.checkAssignment(
+                    (String)id,
+                    exprType,
+                    idleft + 1,
+                    idright + 1
+                );
+            :}
             | estructura_control
             | llamada_funcion PUNTO_COMA
             | read_stmt
             | write_stmt
-            | IDENTIFICADOR INCREMENTO PUNTO_COMA
-            | IDENTIFICADOR DECREMENTO PUNTO_COMA
+            | IDENTIFICADOR:id INCREMENTO PUNTO_COMA
+            {:
+                // Verificar incremento
+                parser.semanticAnalyzer.checkIncrementDecrement(
+                    (String)id,
+                    "++",
+                    idleft + 1,
+                    idright + 1
+                );
+            :}
+            | IDENTIFICADOR:id DECREMENTO PUNTO_COMA
+            {:
+                // Verificar decremento
+                parser.semanticAnalyzer.checkIncrementDecrement(
+                    (String)id,
+                    "--",
+                    idleft + 1,
+                    idright + 1
+                );
+            :}
             | error PUNTO_COMA
               {: parser.report_error("Error en sentencia. Verifique asignaciones, llamadas a funciones o estructuras de control", null); :}
             ;
@@ -314,13 +463,40 @@ sentencias_main ::= sentencia_main
                   | sentencias_main sentencia_main
                   ;
 
-sentencia_main ::= IDENTIFICADOR ASIGNACION expresion PUNTO_COMA
+sentencia_main ::= IDENTIFICADOR:id ASIGNACION expresion:exprType PUNTO_COMA
+                 {:
+                     // Verificar asignación con compatibilidad de tipos
+                     parser.semanticAnalyzer.checkAssignment(
+                         (String)id,
+                         exprType,
+                         idleft + 1,
+                         idright + 1
+                     );
+                 :}
                  | estructura_control
                  | llamada_funcion PUNTO_COMA
                  | read_stmt
                  | write_stmt
-                 | IDENTIFICADOR INCREMENTO PUNTO_COMA
-                 | IDENTIFICADOR DECREMENTO PUNTO_COMA
+                 | IDENTIFICADOR:id INCREMENTO PUNTO_COMA
+                 {:
+                     // Verificar incremento
+                     parser.semanticAnalyzer.checkIncrementDecrement(
+                         (String)id,
+                         "++",
+                         idleft + 1,
+                         idright + 1
+                     );
+                 :}
+                 | IDENTIFICADOR:id DECREMENTO PUNTO_COMA
+                 {:
+                     // Verificar decremento
+                     parser.semanticAnalyzer.checkIncrementDecrement(
+                         (String)id,
+                         "--",
+                         idleft + 1,
+                         idright + 1
+                     );
+                 :}
                  | funcion_global
                  | procedure_global
                  | error PUNTO_COMA
@@ -328,33 +504,112 @@ sentencia_main ::= IDENTIFICADOR ASIGNACION expresion PUNTO_COMA
                  ;
 
 /* ========== EXPRESIONES ARITMETICAS ========== */
-expresion ::= expresion MAS termino
-            | expresion MENOS termino
-            | termino
+expresion ::= expresion:e1 MAS termino:e2
+            {:
+                RESULT = parser.semanticAnalyzer.checkBinaryOperation(
+                    "+", e1, e2, e1left + 1, e1right + 1
+                );
+            :}
+            | expresion:e1 MENOS termino:e2
+            {:
+                RESULT = parser.semanticAnalyzer.checkBinaryOperation(
+                    "-", e1, e2, e1left + 1, e1right + 1
+                );
+            :}
+            | termino:t
+            {: RESULT = t; :}
             ;
 
-termino ::= termino POR factor
-          | termino DIVISION factor
-          | termino DIV factor
-          | termino MOD factor
-          | factor
+termino ::= termino:t1 POR factor:f
+          {:
+              RESULT = parser.semanticAnalyzer.checkBinaryOperation(
+                  "*", t1, f, t1left + 1, t1right + 1
+              );
+          :}
+          | termino:t1 DIVISION factor:f
+          {:
+              RESULT = parser.semanticAnalyzer.checkBinaryOperation(
+                  "/", t1, f, t1left + 1, t1right + 1
+              );
+          :}
+          | termino:t1 DIV factor:f
+          {:
+              RESULT = parser.semanticAnalyzer.checkBinaryOperation(
+                  "DIV", t1, f, t1left + 1, t1right + 1
+              );
+          :}
+          | termino:t1 MOD factor:f
+          {:
+              RESULT = parser.semanticAnalyzer.checkBinaryOperation(
+                  "MOD", t1, f, t1left + 1, t1right + 1
+              );
+          :}
+          | factor:f
+          {: RESULT = f; :}
           ;
 
-factor ::= PARENTESIS_IZQ expresion PARENTESIS_DER
-         | IDENTIFICADOR
-         | llamada_funcion
+factor ::= PARENTESIS_IZQ expresion:e PARENTESIS_DER
+         {: RESULT = e; :}
+         | IDENTIFICADOR:id
+         {:
+             RESULT = parser.semanticAnalyzer.getVariableType(
+                 (String)id, idleft + 1, idright + 1
+             );
+         :}
+         | llamada_funcion:retType
+         {: RESULT = retType; :}
          | LIT_ENTERO
+         {: RESULT = "INT"; :}
          | LIT_REAL
+         {: RESULT = "REAL"; :}
          | LIT_OCTAL
+         {: RESULT = "INT"; :}
          | LIT_HEX
+         {: RESULT = "INT"; :}
          | LIT_STRING
+         {: RESULT = "STRING"; :}
          | LIT_CHAR
-         | MENOS factor
-         | MAS factor
-         | IDENTIFICADOR INCREMENTO
-         | IDENTIFICADOR DECREMENTO
-         | INCREMENTO IDENTIFICADOR
-         | DECREMENTO IDENTIFICADOR
+         {: RESULT = "CHAR"; :}
+         | MENOS factor:f
+         {:
+             RESULT = parser.semanticAnalyzer.checkUnaryOperation(
+                 "-", f, fleft + 1, fright + 1
+             );
+         :}
+         | MAS factor:f
+         {:
+             RESULT = parser.semanticAnalyzer.checkUnaryOperation(
+                 "+", f, fleft + 1, fright + 1
+             );
+         :}
+         | IDENTIFICADOR:id INCREMENTO
+         {:
+             parser.semanticAnalyzer.checkIncrementDecrement(
+                 (String)id, "++", idleft + 1, idright + 1
+             );
+             RESULT = "INT";
+         :}
+         | IDENTIFICADOR:id DECREMENTO
+         {:
+             parser.semanticAnalyzer.checkIncrementDecrement(
+                 (String)id, "--", idleft + 1, idright + 1
+             );
+             RESULT = "INT";
+         :}
+         | INCREMENTO IDENTIFICADOR:id
+         {:
+             parser.semanticAnalyzer.checkIncrementDecrement(
+                 (String)id, "++", idleft + 1, idright + 1
+             );
+             RESULT = "INT";
+         :}
+         | DECREMENTO IDENTIFICADOR:id
+         {:
+             parser.semanticAnalyzer.checkIncrementDecrement(
+                 (String)id, "--", idleft + 1, idright + 1
+             );
+             RESULT = "INT";
+         :}
          ;
 
 /* ========== EXPRESIONES BOOLEANAS (CONDICIONES) ========== */
@@ -370,12 +625,42 @@ condicion_not ::= NOT condicion_not
                 | condicion_relacional
                 ;
 
-condicion_relacional ::= expresion IGUAL expresion
-                       | expresion DIFERENTE expresion
-                       | expresion MENOR expresion
-                       | expresion MAYOR expresion
-                       | expresion MENOR_IGUAL expresion
-                       | expresion MAYOR_IGUAL expresion
+condicion_relacional ::= expresion:e1 IGUAL expresion:e2
+                       {:
+                           parser.semanticAnalyzer.checkRelationalOperation(
+                               "==", e1, e2, e1left + 1, e1right + 1
+                           );
+                       :}
+                       | expresion:e1 DIFERENTE expresion:e2
+                       {:
+                           parser.semanticAnalyzer.checkRelationalOperation(
+                               "!=", e1, e2, e1left + 1, e1right + 1
+                           );
+                       :}
+                       | expresion:e1 MENOR expresion:e2
+                       {:
+                           parser.semanticAnalyzer.checkRelationalOperation(
+                               "<", e1, e2, e1left + 1, e1right + 1
+                           );
+                       :}
+                       | expresion:e1 MAYOR expresion:e2
+                       {:
+                           parser.semanticAnalyzer.checkRelationalOperation(
+                               ">", e1, e2, e1left + 1, e1right + 1
+                           );
+                       :}
+                       | expresion:e1 MENOR_IGUAL expresion:e2
+                       {:
+                           parser.semanticAnalyzer.checkRelationalOperation(
+                               "<=", e1, e2, e1left + 1, e1right + 1
+                           );
+                       :}
+                       | expresion:e1 MAYOR_IGUAL expresion:e2
+                       {:
+                           parser.semanticAnalyzer.checkRelationalOperation(
+                               ">=", e1, e2, e1left + 1, e1right + 1
+                           );
+                       :}
                        | PARENTESIS_IZQ condicion PARENTESIS_DER
                        ;
 
@@ -424,7 +709,15 @@ if_stmt ::= IF condicion THEN BEGIN sentencias_main END
 /* ========== READ Y WRITE ========== */
 read_stmt ::=
               READ PARENTESIS_IZQ PARENTESIS_DER PUNTO_COMA
-            | READ PARENTESIS_IZQ IDENTIFICADOR PARENTESIS_DER PUNTO_COMA
+            | READ PARENTESIS_IZQ IDENTIFICADOR:id PARENTESIS_DER PUNTO_COMA
+            {:
+                // Verificar operación READ
+                parser.semanticAnalyzer.checkReadOperation(
+                    (String)id,
+                    idleft + 1,
+                    idright + 1
+                );
+            :}
             | READ PARENTESIS_IZQ IDENTIFICADOR COMA error PARENTESIS_DER PUNTO_COMA
                 {: parser.report_error("Error: 'READ' solo acepta una variable. Formato correcto: READ(variable);", null); :}
             | READ PARENTESIS_IZQ error PARENTESIS_DER PUNTO_COMA
@@ -444,20 +737,59 @@ write_stmt ::= WRITE PARENTESIS_IZQ lista_expresiones PARENTESIS_DER PUNTO_COMA
              ;
 
 /* ========== LLAMADAS A FUNCIONES ========== */
-llamada_funcion ::= IDENTIFICADOR PARENTESIS_IZQ lista_expresiones PARENTESIS_DER
-                  | IDENTIFICADOR PARENTESIS_IZQ PARENTESIS_DER
+llamada_funcion ::= IDENTIFICADOR:fname PARENTESIS_IZQ lista_expresiones:argTypes PARENTESIS_DER
+                  {:
+                      // Verificar llamada a función con tipos de argumentos
+                      RESULT = parser.semanticAnalyzer.checkFunctionCallWithStringTypes(
+                          (String)fname,
+                          argTypes,
+                          fnameleft + 1,
+                          fnameright + 1
+                      );
+                  :}
+                  | IDENTIFICADOR:fname PARENTESIS_IZQ PARENTESIS_DER
+                  {:
+                      // Llamada sin argumentos
+                      RESULT = parser.semanticAnalyzer.checkFunctionCallWithStringTypes(
+                          (String)fname,
+                          new java.util.ArrayList<String>(),
+                          fnameleft + 1,
+                          fnameright + 1
+                      );
+                  :}
                   ;
 
-lista_expresiones ::= expresion mas_expresiones
+lista_expresiones ::= expresion:e mas_expresiones:resto
+                    {:
+                        java.util.ArrayList<String> tipos = new java.util.ArrayList<>();
+                        tipos.add(e);
+                        if (resto != null) {
+                            tipos.addAll(resto);
+                        }
+                        RESULT = tipos;
+                    :}
                     ;
 
-mas_expresiones ::= COMA expresion mas_expresiones
+mas_expresiones ::= COMA expresion:e mas_expresiones:resto
+                  {:
+                      java.util.ArrayList<String> tipos = new java.util.ArrayList<>();
+                      tipos.add(e);
+                      if (resto != null) {
+                          tipos.addAll(resto);
+                      }
+                      RESULT = tipos;
+                  :}
                   | /* vacío */
+                  {: RESULT = null; :}
                   ;
 
 /* ========== TIPOS DE DATOS ========== */
-tipo ::= INT
-       | CHAR
-       | REAL
-       | STRING
+tipo ::= INT:t
+         {: RESULT = "INT"; :}
+       | CHAR:t
+         {: RESULT = "CHAR"; :}
+       | REAL:t
+         {: RESULT = "REAL"; :}
+       | STRING:t
+         {: RESULT = "STRING"; :}
        ;

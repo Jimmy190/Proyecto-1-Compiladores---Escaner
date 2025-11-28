@@ -1,0 +1,19 @@
+{ Test: Operaciones con tipos incompatibles }
+PROGRAM TestOperacionesInvalidas
+VAR
+    x : INT;
+    s : STRING;
+    c : CHAR;
+    r : REAL;
+BEGIN
+    x := 10;
+    s := "hola";
+    c := 'a';
+    r := 3.14;
+    
+    { Errores de tipo en operaciones }
+    x := x + s;                 { ERROR: INT + STRING }
+    r := r * c;                 { ERROR: REAL * CHAR }
+    x := s - c;                 { ERROR: STRING - CHAR }
+    x := s / x                  { ERROR: STRING / INT }
+END.

@@ -1,0 +1,10 @@
+{ Test: Variable declarada dos veces }
+PROGRAM TestVariableDuplicada
+VAR
+    valor : INT;
+    nombre : STRING;
+    valor : REAL;    { ERROR: 'valor' ya fue declarada como INT }
+BEGIN
+    valor := 10;
+    nombre := "test"
+END.

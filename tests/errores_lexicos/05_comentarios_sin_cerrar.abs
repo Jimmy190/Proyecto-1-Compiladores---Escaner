@@ -1,0 +1,10 @@
+PROGRAM ErrorComentarios
+VAR
+    x : INT;
+BEGIN
+    { Este comentario no cierra
+    x := 10;
+    
+    (* Este tampoco cierra
+    x := 20;
+END

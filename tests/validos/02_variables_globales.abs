@@ -1,0 +1,8 @@
+PROGRAM TestVariables
+VAR
+    x, y, z : INT;
+    nombre, apellido : STRING;
+    temperatura : REAL;
+    inicial : CHAR;
+BEGIN
+END

@@ -1,0 +1,13 @@
+PROGRAM TestProcedure
+VAR
+    mensaje : STRING;
+
+PROCEDURE ImprimirMensaje(STRING texto)
+BEGIN
+    WRITE(texto);
+END
+
+BEGIN
+    mensaje := "Hola Mundo";
+    ImprimirMensaje(mensaje);
+END

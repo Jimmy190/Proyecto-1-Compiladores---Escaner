@@ -1,0 +1,9 @@
+{ Test: Uso de variable no declarada }
+PROGRAM TestVariableNoDeclarada
+VAR
+    x : INT;
+BEGIN
+    x := 10;
+    y := 20;        { ERROR: 'y' no ha sido declarada }
+    x := y + x      { ERROR: 'y' no ha sido declarada }
+END.

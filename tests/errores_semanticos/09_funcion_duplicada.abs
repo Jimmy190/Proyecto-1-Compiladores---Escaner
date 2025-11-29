@@ -1,0 +1,18 @@
+{ Test: Función duplicada }
+PROGRAM TestFuncionDuplicada
+VAR
+    resultado : INT;
+
+FUNCTION calcular(INT x): INT
+BEGIN
+    calcular := x * 2
+END
+
+FUNCTION calcular(INT y): INT     { ERROR: 'calcular' ya fue declarada }
+BEGIN
+    calcular := y + 5
+END
+
+BEGIN
+    resultado := calcular(10)
+END.

@@ -1,0 +1,15 @@
+PROGRAM ErrorIF
+VAR
+    x : INT;
+BEGIN
+    x := 10;
+    
+    IF x > 5
+    BEGIN
+        WRITE("Mayor");
+    END
+    
+    IF x < 20 THEN
+        WRITE("Menor");
+    END
+END

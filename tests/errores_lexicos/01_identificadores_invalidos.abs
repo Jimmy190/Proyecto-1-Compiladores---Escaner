@@ -1,0 +1,7 @@
+PROGRAM ErrorIdentificador
+VAR
+    123variable : INT;
+    nombre@ : STRING;
+    _invalido : CHAR;
+BEGIN
+END

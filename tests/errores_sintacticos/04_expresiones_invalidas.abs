@@ -1,0 +1,8 @@
+PROGRAM ErrorExpresion
+VAR
+    x, y, z : INT;
+BEGIN
+    x := 10 + ;
+    y := * 5;
+    z := 3 4;
+END

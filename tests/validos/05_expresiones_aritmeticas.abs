@@ -1,0 +1,19 @@
+PROGRAM TestExpresiones
+VAR
+    a, b, c, resultado : INT;
+BEGIN
+    a := 10;
+    b := 20;
+    c := 5;
+    
+    resultado := a + b * c;
+    resultado := (a + b) * c;
+    resultado := a - b / c;
+    resultado := a DIV b;
+    resultado := a MOD c;
+    
+    a++;
+    b--;
+    
+    WRITE(resultado);
+END

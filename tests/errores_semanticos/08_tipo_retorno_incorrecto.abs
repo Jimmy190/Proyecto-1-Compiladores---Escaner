@@ -1,0 +1,20 @@
+{ Test: Tipo de retorno incorrecto en función }
+PROGRAM TestRetornoIncorrecto
+VAR
+    x : INT;
+    s : STRING;
+
+FUNCTION obtenerNumero(): INT
+BEGIN
+    obtenerNumero := "texto"        { ERROR: retorna STRING pero debe ser INT }
+END
+
+FUNCTION obtenerTexto(): STRING
+BEGIN
+    obtenerTexto := 42              { ERROR: retorna INT pero debe ser STRING }
+END
+
+BEGIN
+    x := obtenerNumero();
+    s := obtenerTexto()
+END.

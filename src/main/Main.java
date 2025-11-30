@@ -3,6 +3,7 @@ import java_cup.runtime.*;
 import lexer.Scanner;
 import parser.Parser;
 import semantic.*;
+import codegen.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -126,13 +127,70 @@ public class Main {
             System.out.println("Total de errores semanticos: " + erroresSemanticos.size());
             System.out.println("Total de errores: " + totalErrores);
             
+            // ========== GENERACION DE CODIGO ==========
             if (totalErrores == 0) {
-                System.out.println("\nANALISIS COMPLETADO EXITOSAMENTE!");
+                System.out.println("\n" + "=".repeat(60));
+                System.out.println("         GENERACION DE CODIGO ASSEMBLY NASM");
+                System.out.println("=".repeat(60));
+                System.out.println("Iniciando traduccion a Assembly NASM...\n");
+                CodeGenerator genCode = parser.getCodeGenerator(); 
+                System.out.println(genCode.getCode());
+                String asmCode = genCode.getCode();
+                System.out.println("\nTraduccion a Assembly NASM completada.");
+                // try {
+                //     // Crear generador de código
+                //     CodeGenerator codeGen = new CodeGenerator(semanticAnalyzer.getSymbolTable());
+                    
+                //     // NOTA: La generación de código debería hacerse durante el parsing
+                //     // Para este ejemplo, mostramos la estructura básica
+                    
+                //     // Declarar variables globales
+                //     // codeGen.declareGlobalVariables();
+                    
+                //     // Generar código del main
+                //     codeGen.beginMain();
+                    
+                //     // AQUÍ SE GENERARÍA EL CÓDIGO DURANTE EL PARSING
+                //     // Por ahora, mostramos un ejemplo básico
+                    
+                //     codeGen.endMain();
+                    
+                //     // Obtener código generado
+                //     String asmCode = codeGen.getCode();
+                    
+                //     // Mostrar código generado
+                //     System.out.println("CODIGO ASSEMBLY MIPS GENERADO:");
+                //     System.out.println("=".repeat(60));
+                //     System.out.println(asmCode);
+                //     System.out.println("=".repeat(60));
+                    
+                //     // Guardar código en archivo .asm
+                String asmFileName = rutaArchivo.replace(".abs", ".asm");
+                try (PrintWriter writer = new PrintWriter(new FileWriter(asmFileName))) {
+                    writer.println("; ============================================");
+                    writer.println("; Codigo generado por el Compilador ABS");
+                    writer.println("; Archivo fuente: " + rutaArchivo);
+                    writer.println("; ============================================\n");
+                    writer.println(asmCode);
+                }
+                    
+                //     System.out.println("\nCodigo Assembly guardado en: " + asmFileName);
+                    
+                // } catch (Exception e) {
+                //     System.err.println("ERROR durante la generacion de codigo: " + e.getMessage());
+                //     e.printStackTrace();
+                // }
+                
+                System.out.println("\n" + "=".repeat(60));
+                System.out.println("COMPILACION COMPLETADA EXITOSAMENTE!");
                 System.out.println("El codigo fuente es lexica, sintactica y semanticamente correcto");
+                System.out.println("Codigo Assembly MIPS generado correctamente");
+                System.out.println("=".repeat(60));
                 System.exit(0);  // Exit code 0: exito
             } else {
                 System.out.println("\nSE ENCONTRARON ERRORES - REVISE LOS REPORTES ANTERIORES");
                 System.out.println("(El analisis completo el archivo a pesar de los errores)");
+                System.out.println("\nNO SE GENERARA CODIGO ASSEMBLY debido a los errores encontrados");
                 System.exit(1);  // Exit code 1: errores encontrados
             }
 
@@ -146,6 +204,7 @@ public class Main {
             System.exit(3);  // Exit code 3: error de I/O
         } catch (Exception e) {
             System.err.println("ERROR durante el analisis: " + e.getMessage());
+            e.printStackTrace();
             System.exit(4);  // Exit code 4: error general
         }
     }

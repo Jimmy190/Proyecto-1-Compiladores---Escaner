@@ -3,6 +3,7 @@ package parser;
 import java_cup.runtime.*;
 import java.util.ArrayList;
 import semantic.*;
+import codegen.*;
 
 parser code {:
     // Lista para almacenar errores sintacticos
@@ -21,6 +22,11 @@ parser code {:
         return semanticAnalyzer;
     }
     
+    private CodeGenerator codeGenerator = new CodeGenerator(semanticAnalyzer.getSymbolTable());
+    public CodeGenerator getCodeGenerator() {
+        return codeGenerator;
+    }
+
     // Metodo mejorado para reportar errores sintacticos con contexto
     public void report_error(String message, Object info) {
         if (errorCount >= MAX_ERRORS) {
@@ -185,6 +191,7 @@ programa ::= PROGRAM IDENTIFICADOR:name init_program variables_globales funcione
            | PROGRAM IDENTIFICADOR:name init_program variables_globales funciones_globales cuerpo_main PUNTO
              {:
                 parser.semanticAnalyzer.endProgram();
+                parser.codeGenerator.endMain();
              :}
            | PROGRAM error variables_globales funciones_globales cuerpo_main
              {: parser.report_error("Falta el nombre del programa despues de PROGRAM", null); :}
@@ -448,7 +455,17 @@ sentencia ::= IDENTIFICADOR:id ASIGNACION expresion:exprType PUNTO_COMA
 
 /* ========== Cuerpo del Main ========== */
 cuerpo_main ::= BEGIN sentencias_main END
+                {:
+                    parser.codeGenerator.declareGlobalVariables();
+                    parser.codeGenerator.beginMain();
+                    parser.codeGenerator.flushMainBuffer();
+                :}
               | BEGIN END
+                {:
+                    parser.codeGenerator.declareGlobalVariables();
+                    parser.codeGenerator.beginMain();
+                    parser.codeGenerator.flushMainBuffer();
+                :}
               | error sentencias_main END
                 {: parser.report_error("Error en el cuerpo del programa principal", null); :}
               | error END
@@ -465,13 +482,17 @@ sentencias_main ::= sentencia_main
 
 sentencia_main ::= IDENTIFICADOR:id ASIGNACION expresion:exprType PUNTO_COMA
                  {:
-                     // Verificar asignación con compatibilidad de tipos
-                     parser.semanticAnalyzer.checkAssignment(
-                         (String)id,
-                         exprType,
-                         idleft + 1,
-                         idright + 1
-                     );
+                    // Verificar asignación con compatibilidad de tipos
+                    parser.semanticAnalyzer.checkAssignment(
+                        (String)id,
+                        exprType,
+                        idleft + 1,
+                        idright + 1
+                    );
+                    parser.codeGenerator.generateAssignment(
+                        (String)id,
+                        exprType
+                    );
                  :}
                  | estructura_control
                  | llamada_funcion PUNTO_COMA
@@ -509,12 +530,14 @@ expresion ::= expresion:e1 MAS termino:e2
                 RESULT = parser.semanticAnalyzer.checkBinaryOperation(
                     "+", e1, e2, e1left + 1, e1right + 1
                 );
+                parser.codeGenerator.generateAddition();
             :}
             | expresion:e1 MENOS termino:e2
             {:
                 RESULT = parser.semanticAnalyzer.checkBinaryOperation(
                     "-", e1, e2, e1left + 1, e1right + 1
                 );
+                parser.codeGenerator.generateSubtraction();
             :}
             | termino:t
             {: RESULT = t; :}
@@ -558,8 +581,11 @@ factor ::= PARENTESIS_IZQ expresion:e PARENTESIS_DER
          :}
          | llamada_funcion:retType
          {: RESULT = retType; :}
-         | LIT_ENTERO
-         {: RESULT = "INT"; :}
+         | LIT_ENTERO:num
+         {: 
+          RESULT = "INT"; 
+          parser.codeGenerator.loadIntLiteral(num.toString());
+         :}
          | LIT_REAL
          {: RESULT = "REAL"; :}
          | LIT_OCTAL
@@ -729,7 +755,10 @@ read_stmt ::=
             ;
 
 
-write_stmt ::= WRITE PARENTESIS_IZQ lista_expresiones PARENTESIS_DER PUNTO_COMA
+write_stmt ::= WRITE PARENTESIS_IZQ lista_expresiones:args PARENTESIS_DER PUNTO_COMA
+             {:
+                parser.codeGenerator.generateWriteList(args);
+             :}
              | WRITE PARENTESIS_IZQ error PARENTESIS_DER PUNTO_COMA
                {: parser.report_error("Expresion invalida en WRITE, debe tener por lo menos un parametro. Use expresiones, variables o literales", null); :}
              | WRITE error PUNTO_COMA

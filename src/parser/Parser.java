@@ -8,6 +8,7 @@ package parser;
 import java_cup.runtime.*;
 import java.util.ArrayList;
 import semantic.*;
+import codegen.*;
 import java_cup.runtime.XMLElement;
 
 /** CUP v0.11b 20160615 (GIT 4ac7450) generated parser.
@@ -819,6 +820,11 @@ public class Parser extends java_cup.runtime.lr_parser {
         return semanticAnalyzer;
     }
     
+    private CodeGenerator codeGenerator = new CodeGenerator(semanticAnalyzer.getSymbolTable());
+    public CodeGenerator getCodeGenerator() {
+        return codeGenerator;
+    }
+
     // Metodo mejorado para reportar errores sintacticos con contexto
     public void report_error(String message, Object info) {
         if (errorCount >= MAX_ERRORS) {
@@ -946,6 +952,7 @@ class CUP$Parser$actions {
 		Object name = (Object)((java_cup.runtime.Symbol) CUP$Parser$stack.elementAt(CUP$Parser$top-5)).value;
 		
                 parser.semanticAnalyzer.endProgram();
+                parser.codeGenerator.endMain();
              
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("programa",15, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-6)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
@@ -1692,7 +1699,11 @@ class CUP$Parser$actions {
           case 62: // cuerpo_main ::= BEGIN sentencias_main END 
             {
               Object RESULT =null;
-
+		
+                    parser.codeGenerator.declareGlobalVariables();
+                    parser.codeGenerator.beginMain();
+                    parser.codeGenerator.flushMainBuffer();
+                
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("cuerpo_main",41, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;
@@ -1701,7 +1712,11 @@ class CUP$Parser$actions {
           case 63: // cuerpo_main ::= BEGIN END 
             {
               Object RESULT =null;
-
+		
+                    parser.codeGenerator.declareGlobalVariables();
+                    parser.codeGenerator.beginMain();
+                    parser.codeGenerator.flushMainBuffer();
+                
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("cuerpo_main",41, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-1)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;
@@ -1771,13 +1786,17 @@ class CUP$Parser$actions {
 		int exprTyperight = ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-1)).right;
 		String exprType = (String)((java_cup.runtime.Symbol) CUP$Parser$stack.elementAt(CUP$Parser$top-1)).value;
 		
-                     // Verificar asignación con compatibilidad de tipos
-                     parser.semanticAnalyzer.checkAssignment(
-                         (String)id,
-                         exprType,
-                         idleft + 1,
-                         idright + 1
-                     );
+                    // Verificar asignación con compatibilidad de tipos
+                    parser.semanticAnalyzer.checkAssignment(
+                        (String)id,
+                        exprType,
+                        idleft + 1,
+                        idright + 1
+                    );
+                    parser.codeGenerator.generateAssignment(
+                        (String)id,
+                        exprType
+                    );
                  
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("sentencia_main",30, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-3)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
@@ -1900,6 +1919,7 @@ class CUP$Parser$actions {
                 RESULT = parser.semanticAnalyzer.checkBinaryOperation(
                     "+", e1, e2, e1left + 1, e1right + 1
                 );
+                parser.codeGenerator.generateAddition();
             
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("expresion",10, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
@@ -1919,6 +1939,7 @@ class CUP$Parser$actions {
                 RESULT = parser.semanticAnalyzer.checkBinaryOperation(
                     "-", e1, e2, e1left + 1, e1right + 1
                 );
+                parser.codeGenerator.generateSubtraction();
             
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("expresion",10, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
@@ -2068,7 +2089,13 @@ class CUP$Parser$actions {
           case 91: // factor ::= LIT_ENTERO 
             {
               String RESULT =null;
-		 RESULT = "INT"; 
+		int numleft = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).left;
+		int numright = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).right;
+		Object num = (Object)((java_cup.runtime.Symbol) CUP$Parser$stack.peek()).value;
+		 
+          RESULT = "INT"; 
+          parser.codeGenerator.loadIntLiteral(num.toString());
+         
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("factor",12, ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;
@@ -2643,7 +2670,12 @@ class CUP$Parser$actions {
           case 142: // write_stmt ::= WRITE PARENTESIS_IZQ lista_expresiones PARENTESIS_DER PUNTO_COMA 
             {
               Object RESULT =null;
-
+		int argsleft = ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)).left;
+		int argsright = ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)).right;
+		java.util.ArrayList<String> args = (java.util.ArrayList<String>)((java_cup.runtime.Symbol) CUP$Parser$stack.elementAt(CUP$Parser$top-2)).value;
+		
+                parser.codeGenerator.generateWriteList(args);
+             
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("write_stmt",40, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-4)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;

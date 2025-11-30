@@ -1,29 +1,12 @@
-PROGRAM ErrorFuncion
-
-FUNCTION Sumar(INT a, INT b): INT
+{ Test: Uso de variable no declarada }
+PROGRAM TestVariableNoDeclarada
+VAR
+    x : INT;
+    z : INT;
+    i : INT;
+    j : STRING;
 BEGIN
-    Sumar := a + b
-END
+    x := 10;
+    WRITE(x, 10, i + 2);
 
-FUNCTION Sumar(INT a, INT b): INT
-    VAR
-        x, y : INT;
-        nombre : STRING;
-        edad : INT;
-        contador : INT;
-    BEGIN
-        Sumar := a + b
-    END
-
-PROCEDURE Imprimir(STRING texto, INT edad)
-    VAR
-        x, y : INT;
-        nombre : STRING;
-        edad : INT;
-        contador : INT;
-    BEGIN
-        WRITE(texto);
-    END
-
-BEGIN
-END
+END.

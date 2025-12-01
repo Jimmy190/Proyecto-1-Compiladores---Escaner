@@ -130,28 +130,6 @@ public class CodeGenerator {
     /**
      * Genera código para una asignación
      */
-    // public void generateAssignment(String varName, String exprType) {
-    //     String value = semanticStack.pop();
-    //     String var = varName.toLowerCase();
-        
-    //     textSection.append("\n; Asignacion: ").append(varName).append(" := ").append(value).append("\n");
-        
-    //     // Cargar el valor de la expresión en eax
-    //     if (value.startsWith("[") || variableAddresses.containsKey(value)) {
-    //         // Es una variable
-    //         textSection.append("    mov eax, ").append(value).append("\n");
-    //     } else if (value.matches("-?\\d+")) {
-    //         // Es un literal entero
-    //         textSection.append("    mov eax, ").append(value).append("\n");
-    //     } else {
-    //         // Es un registro
-    //         textSection.append("    mov eax, ").append(value).append("\n");
-    //     }
-        
-    //     // Almacenar en la variable
-    //     textSection.append("    mov [").append(var).append("], eax\n");
-    // }
-    
     public void generateAssignment(String varName, String exprType) {
         String value = semanticStack.pop();
         String var = varName.toLowerCase();
@@ -185,17 +163,10 @@ public class CodeGenerator {
     /**
      * Genera código para cargar un literal entero en la pila semántica
      */
-    // public void loadIntLiteral(String value) {
-    //     textSection.append("\n; Cargar literal: ").append(value).append("\n");
-    //     textSection.append("    mov eax, ").append(value).append("\n");
-        
-    //     semanticStack.push("eax");
-    // }
     public void loadIntLiteral(String value) {
-        emitToMain("\n; Cargar literal: " + value);
-        emitToMain("    mov eax, " + value);
-
-        semanticStack.push("eax");
+        // emitToMain("\n; Cargar literal: " + value);
+        // emitToMain("    mov eax, " + value);
+        semanticStack.push(value);
     }
 
     
@@ -205,71 +176,70 @@ public class CodeGenerator {
     public void generateAddition() {
         String right = semanticStack.pop();
         String left = semanticStack.pop();
-        
-        textSection.append("\n; Suma\n");
-        
-        // Cargar operandos
-        if (left.equals("eax")) {
-            // left ya está en eax
-        } else if (left.matches("-?\\d+")) {
-            textSection.append("    mov eax, ").append(left).append("\n");
+
+        emitToMain("\n; Suma");
+
+        // cargar left en eax:
+        if (left.matches("-?\\d+")) {
+            emitToMain("    mov eax, " + left);
         } else {
-            textSection.append("    mov eax, [").append(left).append("]\n");
+            emitToMain("    mov eax, [" + left + "]");
         }
-        
-        if (right.equals("ebx")) {
-            textSection.append("    add eax, ebx\n");
-        } else if (right.matches("-?\\d+")) {
-            textSection.append("    add eax, ").append(right).append("\n");
-        } else if (right.equals("eax")) {
-            textSection.append("    add eax, eax\n");
+
+        // sumar right
+        if (right.matches("-?\\d+")) {
+            emitToMain("    add eax, " + right);
         } else {
-            textSection.append("    add eax, [").append(right).append("]\n");
+            emitToMain("    add eax, [" + right + "]");
         }
-        
+
+        // Resultado siempre queda en eax
         semanticStack.push("eax");
     }
+
+
     
     /**
      * Genera código para una resta
      */
     public void generateSubtraction() {
-        String right = semanticStack.pop();
-        String left = semanticStack.pop();
-        
-        textSection.append("\n; Resta\n");
-        
-        // Cargar operando izquierdo
+        String right = semanticStack.pop();  // Operando derecho
+        String left = semanticStack.pop();   // Operando izquierdo
+
+        emitToMain("\n; Resta");
+
+        // === 1. Cargar operando izquierdo en eax ===
         if (left.equals("eax")) {
-            // left ya está en eax
+            // Ya está en eax -> no hacer nada
         } else if (left.matches("-?\\d+")) {
-            textSection.append("    mov eax, ").append(left).append("\n");
+            emitToMain("    mov eax, " + left);  // Literal
         } else {
-            textSection.append("    mov eax, [").append(left).append("]\n");
+            emitToMain("    mov eax, [" + left + "]");  // Variable
         }
-        
-        // Restar operando derecho
-        if (right.equals("ebx")) {
-            textSection.append("    sub eax, ebx\n");
+
+        // === 2. Restar operando derecho ===
+        if (right.equals("eax")) {
+            emitToMain("    sub eax, eax");   // Caso raro: X - X
         } else if (right.matches("-?\\d+")) {
-            textSection.append("    sub eax, ").append(right).append("\n");
-        } else if (right.equals("eax")) {
-            textSection.append("    sub eax, eax\n");
+            emitToMain("    sub eax, " + right); // Literal
+        } else if (right.equals("ebx")) {
+            emitToMain("    sub eax, ebx");   // Registro ebx
         } else {
-            textSection.append("    sub eax, [").append(right).append("]\n");
+            emitToMain("    sub eax, [" + right + "]"); // Variable
         }
-        
+
+        // Resultado queda en eax
         semanticStack.push("eax");
     }
-    
+
     /**
      * Genera código para incremento (++)
      */
     public void generateIncrement(String varName) {
         String var = varName.toLowerCase();
-        
-        textSection.append("\n; Incremento: ").append(varName).append("++\n");
-        textSection.append("    inc dword [").append(var).append("]\n");
+        System.out.println("hola desde generateIncrement con varName: " + varName);
+        emitToMain("\n; Incremento: " + varName + "++");
+        emitToMain("    inc dword [" + var + "]");
     }
     
     /**
@@ -278,8 +248,8 @@ public class CodeGenerator {
     public void generateDecrement(String varName) {
         String var = varName.toLowerCase();
         
-        textSection.append("\n; Decremento: ").append(varName).append("--\n");
-        textSection.append("    dec dword [").append(var).append("]\n");
+        emitToMain("\n; Decremento: " + varName + "--");
+        emitToMain("    dec dword [" + var + "]");
     }
     
     /**

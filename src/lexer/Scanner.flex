@@ -139,12 +139,12 @@ private Symbol crearSymbol(int symType, String token, String tipoToken) {
 
 // ========== OPERADORES Y SÍMBOLOS ==========
 // Símbolos aritméticos
+"++"    { return crearSymbol(sym.INCREMENTO, yytext(), "OPERADOR"); }
+"--"    { return crearSymbol(sym.DECREMENTO, yytext(), "OPERADOR"); }
 "+"     { return crearSymbol(sym.MAS, yytext(), "OPERADOR"); }
 "-"     { return crearSymbol(sym.MENOS, yytext(), "OPERADOR"); }
 "*"     { return crearSymbol(sym.POR, yytext(), "OPERADOR"); }
 "/"     { return crearSymbol(sym.DIVISION, yytext(), "OPERADOR"); }
-"++"    { return crearSymbol(sym.INCREMENTO, yytext(), "OPERADOR"); }
-"--"    { return crearSymbol(sym.DECREMENTO, yytext(), "OPERADOR"); }
 "**"    { return crearSymbol(sym.POTENCIA, yytext(), "OPERADOR"); }
 // Símbolos de comparación
 "="     { return crearSymbol(sym.IGUAL, yytext(), "OPERADOR"); }

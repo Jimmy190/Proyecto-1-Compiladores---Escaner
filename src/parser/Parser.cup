@@ -507,6 +507,7 @@ sentencia_main ::= IDENTIFICADOR:id ASIGNACION expresion:exprType PUNTO_COMA
                          idleft + 1,
                          idright + 1
                      );
+                     parser.codeGenerator.generateIncrement(id.toString());
                  :}
                  | IDENTIFICADOR:id DECREMENTO PUNTO_COMA
                  {:
@@ -517,6 +518,7 @@ sentencia_main ::= IDENTIFICADOR:id ASIGNACION expresion:exprType PUNTO_COMA
                          idleft + 1,
                          idright + 1
                      );
+                     parser.codeGenerator.generateDecrement(id.toString());
                  :}
                  | funcion_global
                  | procedure_global
@@ -578,24 +580,34 @@ factor ::= PARENTESIS_IZQ expresion:e PARENTESIS_DER
              RESULT = parser.semanticAnalyzer.getVariableType(
                  (String)id, idleft + 1, idright + 1
              );
+             parser.codeGenerator.loadIntLiteral(id.toString());
          :}
          | llamada_funcion:retType
          {: RESULT = retType; :}
          | LIT_ENTERO:num
          {: 
-          RESULT = "INT"; 
-          parser.codeGenerator.loadIntLiteral(num.toString());
+            RESULT = "INT"; 
+            parser.codeGenerator.loadIntLiteral(num.toString());
          :}
-         | LIT_REAL
-         {: RESULT = "REAL"; :}
+         | LIT_REAL:num
+         {: 
+            RESULT = "REAL"; 
+            parser.codeGenerator.loadIntLiteral(num.toString());
+         :}
          | LIT_OCTAL
          {: RESULT = "INT"; :}
          | LIT_HEX
          {: RESULT = "INT"; :}
-         | LIT_STRING
-         {: RESULT = "STRING"; :}
-         | LIT_CHAR
-         {: RESULT = "CHAR"; :}
+         | LIT_STRING:lit_s
+         {: 
+            RESULT = "STRING"; 
+            parser.codeGenerator.loadIntLiteral(lit_s.toString());
+         :}
+         | LIT_CHAR:lit_c
+         {: 
+            RESULT = "CHAR";
+            parser.codeGenerator.loadIntLiteral(lit_c.toString());
+          :}
          | MENOS factor:f
          {:
              RESULT = parser.semanticAnalyzer.checkUnaryOperation(
@@ -613,6 +625,7 @@ factor ::= PARENTESIS_IZQ expresion:e PARENTESIS_DER
              parser.semanticAnalyzer.checkIncrementDecrement(
                  (String)id, "++", idleft + 1, idright + 1
              );
+             parser.codeGenerator.generateIncrement(id.toString());
              RESULT = "INT";
          :}
          | IDENTIFICADOR:id DECREMENTO
@@ -620,6 +633,7 @@ factor ::= PARENTESIS_IZQ expresion:e PARENTESIS_DER
              parser.semanticAnalyzer.checkIncrementDecrement(
                  (String)id, "--", idleft + 1, idright + 1
              );
+             parser.codeGenerator.generateDecrement(id.toString());
              RESULT = "INT";
          :}
          | INCREMENTO IDENTIFICADOR:id
@@ -627,6 +641,7 @@ factor ::= PARENTESIS_IZQ expresion:e PARENTESIS_DER
              parser.semanticAnalyzer.checkIncrementDecrement(
                  (String)id, "++", idleft + 1, idright + 1
              );
+             parser.codeGenerator.generateIncrement(id.toString());
              RESULT = "INT";
          :}
          | DECREMENTO IDENTIFICADOR:id

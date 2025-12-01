@@ -1853,6 +1853,7 @@ class CUP$Parser$actions {
                          idleft + 1,
                          idright + 1
                      );
+                     parser.codeGenerator.generateIncrement(id.toString());
                  
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("sentencia_main",30, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
@@ -1873,6 +1874,7 @@ class CUP$Parser$actions {
                          idleft + 1,
                          idright + 1
                      );
+                     parser.codeGenerator.generateDecrement(id.toString());
                  
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("sentencia_main",30, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
@@ -2068,6 +2070,7 @@ class CUP$Parser$actions {
              RESULT = parser.semanticAnalyzer.getVariableType(
                  (String)id, idleft + 1, idright + 1
              );
+             parser.codeGenerator.loadIntLiteral(id.toString());
          
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("factor",12, ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
@@ -2093,8 +2096,8 @@ class CUP$Parser$actions {
 		int numright = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).right;
 		Object num = (Object)((java_cup.runtime.Symbol) CUP$Parser$stack.peek()).value;
 		 
-          RESULT = "INT"; 
-          parser.codeGenerator.loadIntLiteral(num.toString());
+            RESULT = "INT"; 
+            parser.codeGenerator.loadIntLiteral(num.toString());
          
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("factor",12, ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
@@ -2104,7 +2107,13 @@ class CUP$Parser$actions {
           case 92: // factor ::= LIT_REAL 
             {
               String RESULT =null;
-		 RESULT = "REAL"; 
+		int numleft = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).left;
+		int numright = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).right;
+		Object num = (Object)((java_cup.runtime.Symbol) CUP$Parser$stack.peek()).value;
+		 
+            RESULT = "REAL"; 
+            parser.codeGenerator.loadIntLiteral(num.toString());
+         
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("factor",12, ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;
@@ -2131,7 +2140,13 @@ class CUP$Parser$actions {
           case 95: // factor ::= LIT_STRING 
             {
               String RESULT =null;
-		 RESULT = "STRING"; 
+		int lit_sleft = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).left;
+		int lit_sright = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).right;
+		Object lit_s = (Object)((java_cup.runtime.Symbol) CUP$Parser$stack.peek()).value;
+		 
+            RESULT = "STRING"; 
+            parser.codeGenerator.loadIntLiteral(lit_s.toString());
+         
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("factor",12, ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;
@@ -2140,7 +2155,13 @@ class CUP$Parser$actions {
           case 96: // factor ::= LIT_CHAR 
             {
               String RESULT =null;
-		 RESULT = "CHAR"; 
+		int lit_cleft = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).left;
+		int lit_cright = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).right;
+		Object lit_c = (Object)((java_cup.runtime.Symbol) CUP$Parser$stack.peek()).value;
+		 
+            RESULT = "CHAR";
+            parser.codeGenerator.loadIntLiteral(lit_c.toString());
+          
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("factor",12, ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;
@@ -2188,6 +2209,7 @@ class CUP$Parser$actions {
              parser.semanticAnalyzer.checkIncrementDecrement(
                  (String)id, "++", idleft + 1, idright + 1
              );
+             parser.codeGenerator.generateIncrement(id.toString());
              RESULT = "INT";
          
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("factor",12, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-1)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
@@ -2205,6 +2227,7 @@ class CUP$Parser$actions {
              parser.semanticAnalyzer.checkIncrementDecrement(
                  (String)id, "--", idleft + 1, idright + 1
              );
+             parser.codeGenerator.generateDecrement(id.toString());
              RESULT = "INT";
          
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("factor",12, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-1)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
@@ -2222,6 +2245,7 @@ class CUP$Parser$actions {
              parser.semanticAnalyzer.checkIncrementDecrement(
                  (String)id, "++", idleft + 1, idright + 1
              );
+             parser.codeGenerator.generateIncrement(id.toString());
              RESULT = "INT";
          
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("factor",12, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-1)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);

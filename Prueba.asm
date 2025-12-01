@@ -36,44 +36,36 @@ section .text
     extern printf
     extern scanf
 
-
-; Suma
-    add eax, eax
 main:
     push ebp
     mov ebp, esp
 
 
-; Cargar literal: 10
+; Suma
     mov eax, 10
+    add eax, 12
 
 ; Asignacion: x := eax
     mov eax, eax
     mov [x], eax
 
-; Cargar literal: 10
-    mov eax, 10
+; Resta
+    mov eax, 50
+    sub eax, 30
 
-; Cargar literal: 2
-    mov eax, 2
+; Asignacion: z := eax
+    mov eax, eax
+    mov [z], eax
 
-; WRITE(INT)
-    push dword INT
-    push format_int
-    call printf
-    add esp, 8
+; Asignacion: i := 120
+    mov eax, 120
+    mov [i], eax
 
-; WRITE(INT)
-    push dword INT
-    push format_int
-    call printf
-    add esp, 8
+; Incremento: i++
+    inc dword [i]
 
-; WRITE(INT)
-    push dword INT
-    push format_int
-    call printf
-    add esp, 8
+; Decremento: x--
+    dec dword [x]
 
 ; Salir del programa
     mov esp, ebp

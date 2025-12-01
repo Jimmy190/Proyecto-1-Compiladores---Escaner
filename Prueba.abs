@@ -6,7 +6,9 @@ VAR
     i : INT;
     j : STRING;
 BEGIN
-    x := 10;
-    WRITE(x, 10, i + 2);
-
+    x := 10+12;
+    z := 50-30;
+    i := 120;
+    i++;
+    x--;
 END.

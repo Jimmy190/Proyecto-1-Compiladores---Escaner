@@ -16,6 +16,8 @@ section .data
     newline db 10, 0        ; Salto de linea
     format_int db "%d", 10, 0  ; Formato para printf
     format_str db "%s", 10, 0  ; Formato para printf string
+    _strlit_0 db "Hola Mundo", 0
+    _strlit_1 db "hola", 0
 
 ; ============================================
 ; SECCION BSS (Variables)
@@ -61,11 +63,44 @@ main:
     mov eax, 120
     mov [i], eax
 
+; Asignacion: j := "Hola Mundo"
+    mov dword [j], _strlit_0
+
 ; Incremento: i++
     inc dword [i]
 
 ; Decremento: x--
     dec dword [x]
+
+; WRITE(12)
+    push dword 12
+    push dword format_int
+    call printf
+    add esp, 8
+
+; WRITE(123)
+    push dword 123
+    push dword format_int
+    call printf
+    add esp, 8
+
+; WRITE("hola")
+    push dword _strlit_1
+    push dword format_str
+    call printf
+    add esp, 8
+
+; WRITE([x])
+    push dword [x]
+    push dword format_int
+    call printf
+    add esp, 8
+
+; WRITE([j])
+    push dword [j]
+    push dword format_str
+    call printf
+    add esp, 8
 
 ; Salir del programa
     mov esp, ebp

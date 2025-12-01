@@ -580,7 +580,7 @@ factor ::= PARENTESIS_IZQ expresion:e PARENTESIS_DER
              RESULT = parser.semanticAnalyzer.getVariableType(
                  (String)id, idleft + 1, idright + 1
              );
-             parser.codeGenerator.loadIntLiteral(id.toString());
+             parser.codeGenerator.loadVariable(id.toString());
          :}
          | llamada_funcion:retType
          {: RESULT = retType; :}
@@ -771,9 +771,9 @@ read_stmt ::=
 
 
 write_stmt ::= WRITE PARENTESIS_IZQ lista_expresiones:args PARENTESIS_DER PUNTO_COMA
-             {:
-                parser.codeGenerator.generateWriteList(args);
-             :}
+              {:
+                  parser.codeGenerator.generateWriteList(args.size(), args);
+              :}
              | WRITE PARENTESIS_IZQ error PARENTESIS_DER PUNTO_COMA
                {: parser.report_error("Expresion invalida en WRITE, debe tener por lo menos un parametro. Use expresiones, variables o literales", null); :}
              | WRITE error PUNTO_COMA

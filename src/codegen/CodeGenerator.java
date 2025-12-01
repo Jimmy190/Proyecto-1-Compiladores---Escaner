@@ -73,6 +73,22 @@ public class CodeGenerator {
         textSection.append("    extern scanf\n\n");
     }
     
+    private int stringLiteralCounter = 0;
+
+    /**
+     * Registra un literal string en la sección .data con un label único.
+     */
+    public String createStringLiteral(String literal) {
+
+        String clean = literal.substring(1, literal.length() - 1);
+
+        String label = "_strlit_" + stringLiteralCounter++;
+
+        dataSection.append("    " + label + " db \"" + clean + "\", 0\n");
+
+        return label;
+    }
+
     /**
      * Declara variables globales en la sección BSS
      */
@@ -128,44 +144,85 @@ public class CodeGenerator {
     }
     
     /**
-     * Genera código para una asignación
+     * Genera código para una asignación (compatible con INT y STRING)
      */
     public void generateAssignment(String varName, String exprType) {
+
         String value = semanticStack.pop();
         String var = varName.toLowerCase();
-        
+
         emitToMain("\n; Asignacion: " + varName + " := " + value);
 
-        // Cargar valor en eax
-        if (value.startsWith("[") || variableAddresses.containsKey(value)) {
-            emitToMain("    mov eax, " + value);
-        } else if (value.matches("-?\\d+")) {
-            emitToMain("    mov eax, " + value);
-        } else {
-            emitToMain("    mov eax, " + value);
-        }
+        switch (exprType.toUpperCase()) {
 
-        emitToMain("    mov [" + var + "], eax");
+            /* ============================
+            *          ENTERO
+            * ============================ */
+            case "INT": {
+
+                if (value.matches("-?\\d+")) {
+                    emitToMain("    mov eax, " + value);               // literal
+                }
+                else if (variableAddresses.containsKey(value)) {
+                    emitToMain("    mov eax, [" + value + "]");       // variable int
+                }
+                else {
+                    emitToMain("    mov eax, " + value);              // registro
+                }
+
+                emitToMain("    mov [" + var + "], eax");
+                break;
+            }
+
+            /* ============================
+            *          STRING
+            * ============================ */
+            case "STRING": {
+
+                String label;
+
+                if (value.startsWith("\"") && value.endsWith("\"")) {
+
+                    // Crear label en .data
+                    label = createStringLiteral(value);
+
+                    // Guardar puntero
+                    emitToMain("    mov dword [" + var + "], " + label);
+                }
+                else if (variableAddresses.containsKey(value)) {
+
+                    // Copiar puntero desde otra variable string
+                    emitToMain("    mov eax, [" + value + "]");
+                    emitToMain("    mov [" + var + "], eax");
+                }
+                else {
+
+                    // Copiar temporal o registro
+                    emitToMain("    mov [" + var + "], " + value);
+                }
+
+                break;
+            }
+
+            default:
+                emitToMain("; ERROR: tipo no soportado en asignación");
+                break;
+        }
     }
+
 
     /**
      * Genera código para cargar una variable en la pila semántica
      */
     public void loadVariable(String varName) {
-        String var = varName.toLowerCase();
-        
-        textSection.append("\n; Cargar variable: ").append(varName).append("\n");
-        textSection.append("    mov eax, [").append(var).append("]\n");
-        
-        semanticStack.push("eax");
+        String var = varName.toLowerCase(); 
+        semanticStack.push("[" + var + "]");
     }
     
     /**
      * Genera código para cargar un literal entero en la pila semántica
      */
     public void loadIntLiteral(String value) {
-        // emitToMain("\n; Cargar literal: " + value);
-        // emitToMain("    mov eax, " + value);
         semanticStack.push(value);
     }
 
@@ -348,39 +405,93 @@ public class CodeGenerator {
      * Genera código para WRITE de una variable
      */
     public void generateWrite(String varName) {
-        String var = varName.toLowerCase();
+            String var = varName.toLowerCase();
 
-        emitToMain("\n; WRITE(" + varName + ")");
-        emitToMain("    push dword [" + var + "]");
-        emitToMain("    push format_int");
-        emitToMain("    call printf");
-        emitToMain("    add esp, 8");
-    }
-
-    public void generateWriteList(ArrayList<String> args) {
-
-        for (String value : args) {
-
-            emitToMain("\n; WRITE(" + value + ")");
-
-            if (value.startsWith("[") || variableAddresses.containsKey(value)) {
-                // variable
-                emitToMain("    push dword " + value);
-            } 
-            else if (value.matches("-?\\d+")) {
-                // literal entero
-                emitToMain("    push dword " + value);
-            } 
-            else {
-                // registro o temporal (ej: eax)
-                emitToMain("    push dword " + value);
-            }
-
+            emitToMain("\n; WRITE(" + varName + ")");
+            emitToMain("    push dword [" + var + "]");
             emitToMain("    push format_int");
             emitToMain("    call printf");
             emitToMain("    add esp, 8");
         }
+
+        public void generateWriteList(int count, List<String> argumentTypesStr) {
+
+        // 1. Recuperar los valores desde la pila semántica
+        List<String> temp = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            temp.add(semanticStack.pop());
+        }
+        Collections.reverse(temp);
+
+        // 2. Procesar cada elemento a imprimir
+        for (int i = 0; i < count; i++) {
+
+            String value = temp.get(i);
+            String type  = argumentTypesStr.get(i);
+
+            emitToMain("\n; WRITE(" + value + ")");
+
+            switch (type.toLowerCase()) {
+
+                /* ====================================================
+                ===============       ENTERO        =================
+                ==================================================== */
+                case "int":
+
+                    if (value.matches("-?\\d+")) {
+                        emitToMain("    push dword " + value);
+                    }
+                    else if (variableAddresses.containsKey(value)) {
+                        emitToMain("    push dword [" + value + "]");
+                    }
+                    else {
+                        emitToMain("    push dword " + value);
+                    }
+
+                    emitToMain("    push dword format_int");
+                    emitToMain("    call printf");
+                    emitToMain("    add esp, 8");
+                    break;
+
+
+                /* ====================================================
+                ===============       STRING        =================
+                ==================================================== */
+                case "string":
+
+                    // Caso 1: variable string -> push dirección de la variable
+                    if (variableAddresses.containsKey(value)) {
+                        emitToMain("    push dword [" + value + "]");
+                    }
+
+                    // Caso 2: literal string -> crear label con createStringLiteral()
+                    else if (value.startsWith("\"") && value.endsWith("\"")) {
+
+                        // SOLO AQUÍ LLAMAMOS TU FUNCIÓN EXACTA
+                        String label = createStringLiteral(value);
+
+                        emitToMain("    push dword " + label);
+                    }
+
+                    // Caso 3: cualquier otro valor (raro, pero lo dejamos seguro)
+                    else {
+                        emitToMain("    push dword " + value);
+                    }
+
+                    emitToMain("    push dword format_str");
+                    emitToMain("    call printf");
+                    emitToMain("    add esp, 8");
+                    break;
+
+
+                default:
+                    emitToMain("; ERROR: tipo no soportado en WRITE: " + type);
+                    break;
+            }
+        }
     }
+
+
 
     /**
      * Genera código para WRITE de una expresión

@@ -2070,7 +2070,7 @@ class CUP$Parser$actions {
              RESULT = parser.semanticAnalyzer.getVariableType(
                  (String)id, idleft + 1, idright + 1
              );
-             parser.codeGenerator.loadIntLiteral(id.toString());
+             parser.codeGenerator.loadVariable(id.toString());
          
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("factor",12, ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
@@ -2698,8 +2698,8 @@ class CUP$Parser$actions {
 		int argsright = ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)).right;
 		java.util.ArrayList<String> args = (java.util.ArrayList<String>)((java_cup.runtime.Symbol) CUP$Parser$stack.elementAt(CUP$Parser$top-2)).value;
 		
-                parser.codeGenerator.generateWriteList(args);
-             
+                  parser.codeGenerator.generateWriteList(args.size(), args);
+              
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("write_stmt",40, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-4)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;

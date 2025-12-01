@@ -314,92 +314,123 @@ public class CodeGenerator {
      */
     public void generateEqual() {
         String right = semanticStack.pop();
-        String left = semanticStack.pop();
-        
-        textSection.append("\n; Comparacion igual (==)\n");
-        
-        // Cargar operando izquierdo
+        String left  = semanticStack.pop();
+
+        emitToMain("\n; Comparacion igual (==)");
+
+        // Detectar si ya traen corchetes (por ejemplo: "[x]")
+        boolean leftHasBrackets  = left.startsWith("[") && left.endsWith("]");
+        boolean rightHasBrackets = right.startsWith("[") && right.endsWith("]");
+
+        // --- Cargar operando izquierdo ---
         if (left.equals("eax")) {
-            // left ya está en eax
-        } else if (left.matches("-?\\d+")) {
-            textSection.append("    mov eax, ").append(left).append("\n");
-        } else {
-            textSection.append("    mov eax, [").append(left).append("]\n");
+            
+        } 
+        else if (left.matches("-?\\d+")) {
+            emitToMain("    mov eax, " + left);
+        } 
+        else if (leftHasBrackets) {
+            emitToMain("    mov eax, " + left);      // ya viene "[x]"
+        } 
+        else {
+            emitToMain("    mov eax, [" + left + "]"); // variable normal
         }
-        
-        // Comparar
+
+        // --- Comparar con operando derecho ---
         if (right.equals("ebx")) {
-            textSection.append("    cmp eax, ebx\n");
-        } else if (right.matches("-?\\d+")) {
-            textSection.append("    cmp eax, ").append(right).append("\n");
-        } else if (right.equals("eax")) {
-            textSection.append("    cmp eax, eax\n");
-        } else {
-            textSection.append("    cmp eax, [").append(right).append("]\n");
+            emitToMain("    cmp eax, ebx");
+        } 
+        else if (right.matches("-?\\d+")) {
+            emitToMain("    cmp eax, " + right);
+        } 
+        else if (right.equals("eax")) {
+            emitToMain("    cmp eax, eax");
+        } 
+        else if (rightHasBrackets) {
+            emitToMain("    cmp eax, " + right);      // ya viene "[z]"
+        } 
+        else {
+            emitToMain("    cmp eax, [" + right + "]"); // variable normal
         }
-        
-        // Resultado en eax (1 si igual, 0 si no)
-        textSection.append("    sete al\n");
-        textSection.append("    movzx eax, al\n");
-        
+
+        // --- Resultado booleano ---
+        emitToMain("    sete al");
+        emitToMain("    movzx eax, al");
+
         semanticStack.push("eax");
     }
-    
+
     /**
      * Inicia un IF
      */
     public void beginIf() {
         String condition = semanticStack.pop();
+
         String elseLabel = getNewLabel("else");
-        String endLabel = getNewLabel("endif");
-        
-        textSection.append("\n; IF\n");
-        
-        // Verificar condición
+        String endLabel  = getNewLabel("endif");
+
+        emitToMain("\n; --- IF ---");
+
+        // Si la condición está en eax (por ejemplo resultado de generateEqual)
         if (condition.equals("eax")) {
-            textSection.append("    test eax, eax\n");
+            emitToMain("    test eax, eax");
         } else {
-            textSection.append("    cmp ").append(condition).append(", 0\n");
+            emitToMain("    cmp " + condition + ", 0");
         }
-        
-        textSection.append("    je ").append(elseLabel).append("\n\n");
-        
-        // Guardar labels
+
+        // Si condición es falsa → saltar al ELSE
+        emitToMain("    je " + elseLabel);
+
+        // Guardar en pila semántica
         semanticStack.pushLabel(elseLabel);
         semanticStack.pushLabel(endLabel);
     }
-    
+
     /**
      * Genera la parte ELSE del IF
      */
     public void generateElse() {
-        String endLabel = semanticStack.peekLabel();
-        String elseLabel = semanticStack.popLabel(1);
-        
-        textSection.append("    jmp ").append(endLabel).append("\n\n");
-        textSection.append(elseLabel).append(":\n");
-        
-        semanticStack.pushLabel(elseLabel);
+        emitToMain("\n; --- ELSE ---");
+
+        String endLabel  = semanticStack.popLabel(); // arriba
+        String elseLabel = semanticStack.popLabel(); // abajo
+
+        // Saltar al final del IF
+        emitToMain("    jmp " + endLabel);
+
+        // Colocar etiqueta ELSE
+        emitToMain(elseLabel + ":");
+
+        // Reinsertar endLabel para terminar al final
+        semanticStack.pushLabel(endLabel);
     }
+
     
     /**
      * Finaliza el IF
      */
     public void endIf() {
+        emitToMain("\n; --- END IF/ELSE ---");
+
         String endLabel = semanticStack.popLabel();
-        textSection.append("\n").append(endLabel).append(":\n");
+        emitToMain(endLabel + ":");
     }
+
     
     /**
      * Finaliza el IF sin ELSE
      */
     public void endIfNoElse() {
-        String endLabel = semanticStack.popLabel();
+        emitToMain("\n; --- END IF (no ELSE) ---");
+
+        String endLabel  = semanticStack.popLabel();
         String elseLabel = semanticStack.popLabel();
-        
-        textSection.append("\n").append(elseLabel).append(":\n");
-        textSection.append(endLabel).append(":\n");
+
+        // ELSE vacío
+        emitToMain(elseLabel + ":");
+        emitToMain(endLabel + ":");
     }
+
     
     /**
      * Genera código para WRITE de una variable
@@ -414,7 +445,7 @@ public class CodeGenerator {
             emitToMain("    add esp, 8");
         }
 
-        public void generateWriteList(int count, List<String> argumentTypesStr) {
+    public void generateWriteList(int count, List<String> argumentTypesStr) {
 
         // 1. Recuperar los valores desde la pila semántica
         List<String> temp = new ArrayList<>();

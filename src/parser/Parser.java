@@ -2335,8 +2335,9 @@ class CUP$Parser$actions {
 		String e2 = (String)((java_cup.runtime.Symbol) CUP$Parser$stack.peek()).value;
 		
                            parser.semanticAnalyzer.checkRelationalOperation(
-                               "==", e1, e2, e1left + 1, e1right + 1
+                               "=", e1, e2, e1left + 1, e1right + 1
                            );
+                           parser.codeGenerator.generateEqual();   
                        
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("condicion_relacional",34, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
@@ -2567,7 +2568,10 @@ class CUP$Parser$actions {
           case 129: // if_stmt ::= IF condicion THEN BEGIN sentencias_main END 
             {
               Object RESULT =null;
-
+		     
+                parser.codeGenerator.beginIf();
+                parser.codeGenerator.endIfNoElse();
+            
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("if_stmt",38, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-5)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;
@@ -2576,7 +2580,11 @@ class CUP$Parser$actions {
           case 130: // if_stmt ::= IF condicion THEN BEGIN sentencias_main END ELSE BEGIN sentencias_main END 
             {
               Object RESULT =null;
-
+		
+                parser.codeGenerator.beginIf();
+                parser.codeGenerator.generateElse();
+                parser.codeGenerator.endIf();
+            
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("if_stmt",38, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-9)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;

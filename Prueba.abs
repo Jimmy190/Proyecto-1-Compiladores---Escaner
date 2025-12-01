@@ -7,11 +7,10 @@ VAR
     j : STRING;
     
 BEGIN
-    x := 10+12;
-    z := 50-30;
-    i := 120;
-    j := "Hola Mundo";
-    i++;
-    x--;
-    WRITE(12,123,"hola", x, j);
+    
+    IF x = 10 THEN
+        BEGIN
+            x := 12+12;
+        END
+
 END.

@@ -669,8 +669,9 @@ condicion_not ::= NOT condicion_not
 condicion_relacional ::= expresion:e1 IGUAL expresion:e2
                        {:
                            parser.semanticAnalyzer.checkRelationalOperation(
-                               "==", e1, e2, e1left + 1, e1right + 1
+                               "=", e1, e2, e1left + 1, e1right + 1
                            );
+                           parser.codeGenerator.generateEqual();   
                        :}
                        | expresion:e1 DIFERENTE expresion:e2
                        {:
@@ -734,7 +735,16 @@ for_stmt ::= FOR IDENTIFICADOR ASIGNACION expresion TO expresion DO BEGIN senten
            ;
 
 if_stmt ::= IF condicion THEN BEGIN sentencias_main END
+            {:     
+                parser.codeGenerator.beginIf();
+                parser.codeGenerator.endIfNoElse();
+            :}
           | IF condicion THEN BEGIN sentencias_main END ELSE BEGIN sentencias_main END
+            {:
+                parser.codeGenerator.beginIf();
+                parser.codeGenerator.generateElse();
+                parser.codeGenerator.endIf();
+            :}
           | IF error BEGIN sentencias_main END
             {: parser.report_error("Error en la estructura del IF", null); :}
           | IF condicion THEN error sentencias_main END

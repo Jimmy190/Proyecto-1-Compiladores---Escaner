@@ -91,8 +91,8 @@ private void registrarToken(String token, String tipo) {
 
 // Método para mostrar tabla al final
 public void imprimirTokens() {
-    System.out.printf("%-20s %-25s %s\n", "Token", "Tipo de Token", "Líneas");
-    System.out.println("----------------------------------------------------------");
+    System.out.printf("%-40s %-35s %s\n", "Token", "Tipo de Token", "Líneas");
+    System.out.println("--------------------------------------------------------------------------------------------------------------");
     List<String> claves = new ArrayList<>(tokensAceptados.keySet());
     Collections.sort(claves); // orden alfabético
     for(String token : claves) {
@@ -104,7 +104,7 @@ public void imprimirTokens() {
             sb.append(", ");
         }
         if(sb.length() >= 2) sb.setLength(sb.length() - 2); // quitar última coma
-        System.out.printf("%-20s %-25s %s\n", token, info.tipo, sb.toString());
+        System.out.printf("%-40s %-35s %s\n", token, info.tipo, sb.toString());
     }
 }
 

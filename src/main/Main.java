@@ -110,15 +110,15 @@ public class Main {
             }
 
             // ========== TABLA DE TOKENS ACEPTADOS ==========
-            System.out.println("\n" + "=".repeat(60));
-            System.out.println("                TOKENS ACEPTADOS");
-            System.out.println("=".repeat(60));
+            System.out.println("\n" + "=".repeat(110));
+            System.out.println("                                         TOKENS ACEPTADOS");
+            System.out.println("=".repeat(110));
             scanner.imprimirTokens();
 
             // ========== RESUMEN FINAL ==========
-            System.out.println("\n" + "=".repeat(60));
-            System.out.println("                     RESUMEN");
-            System.out.println("=".repeat(60));
+            System.out.println("\n" + "=".repeat(100));
+            System.out.println("                                    RESUMEN");
+            System.out.println("=".repeat(100));
             
             int totalErrores = erroresLexicos.size() + erroresSintacticos.size() + erroresSemanticos.size();
             

@@ -11,7 +11,6 @@ import parser.sym;
 %unicode
 %public
 %cup
-%ignorecase
 %line
 %column
 

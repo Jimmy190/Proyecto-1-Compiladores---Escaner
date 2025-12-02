@@ -6,5 +6,5 @@ VAR
     valor : REAL;    { ERROR: 'valor' ya fue declarada como INT }
 BEGIN
     valor := 10;
-    nombre := "test"
+    nombre := "test";
 END.

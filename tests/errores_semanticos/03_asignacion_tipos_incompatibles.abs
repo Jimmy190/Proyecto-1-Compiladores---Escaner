@@ -9,5 +9,5 @@ BEGIN
     entero := "hola";           { ERROR: no se puede asignar STRING a INT }
     real := 'c';                { ERROR: no se puede asignar CHAR a REAL }
     texto := 123;               { ERROR: no se puede asignar INT a STRING }
-    caracter := 3.14            { ERROR: no se puede asignar REAL a CHAR }
+    caracter := 3.14;            { ERROR: no se puede asignar REAL a CHAR }
 END.

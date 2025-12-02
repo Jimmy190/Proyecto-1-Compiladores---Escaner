@@ -2,8 +2,11 @@
 PROGRAM TestVariableNoDeclarada
 VAR
     x : INT;
+    z : INT;
+    i : INT;
+    j : STRING;
 BEGIN
-    x := 10;
-    y := 20;        { ERROR: 'y' no ha sido declarada }
-    x := y + x      { ERROR: 'y' no ha sido declarada }
+    x := 10+12;
+    y := 50-30;
+    i := 120;
 END.

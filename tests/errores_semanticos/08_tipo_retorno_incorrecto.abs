@@ -16,5 +16,5 @@ END
 
 BEGIN
     x := obtenerNumero();
-    s := obtenerTexto()
+    s := obtenerTexto();
 END.

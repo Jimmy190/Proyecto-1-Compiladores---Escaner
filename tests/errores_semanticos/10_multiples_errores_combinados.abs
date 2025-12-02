@@ -17,5 +17,5 @@ BEGIN
     x := x + "texto";               { ERROR: INT + STRING }
     y := noExiste(5);               { ERROR: 'noExiste' no declarada }
     y := procesar(10, 20);          { ERROR: número de argumentos incorrecto }
-    x := procesar("hola")           { ERROR: tipo de argumento incorrecto }
+    x := procesar("hola");           { ERROR: tipo de argumento incorrecto }
 END.

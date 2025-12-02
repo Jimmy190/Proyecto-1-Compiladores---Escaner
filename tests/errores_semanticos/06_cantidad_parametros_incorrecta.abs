@@ -10,7 +10,7 @@ END
 
 PROCEDURE imprimir(INT valor)
 BEGIN
-    WRITE(valor)
+    WRITE(valor);
 END
 
 BEGIN
@@ -19,5 +19,5 @@ BEGIN
     resultado := suma(5, 10, 15);      { ERROR: sobran argumentos }
     
     imprimir();                         { ERROR: falta argumento }
-    imprimir(10, 20)                    { ERROR: sobran argumentos }
+    imprimir(10, 20);                    { ERROR: sobran argumentos }
 END.

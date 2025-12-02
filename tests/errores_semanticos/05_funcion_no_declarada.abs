@@ -4,5 +4,5 @@ VAR
     resultado : INT;
 BEGIN
     resultado := calcular(5, 10);      { ERROR: 'calcular' no ha sido declarada }
-    resultado := sumar(1, 2, 3)        { ERROR: 'sumar' no ha sido declarada }
+    resultado := sumar(1, 2, 3);        { ERROR: 'sumar' no ha sido declarada }
 END.

@@ -15,5 +15,5 @@ BEGIN
     x := x + s;                 { ERROR: INT + STRING }
     r := r * c;                 { ERROR: REAL * CHAR }
     x := s - c;                 { ERROR: STRING - CHAR }
-    x := s / x                  { ERROR: STRING / INT }
+    x := s / x;                  { ERROR: STRING / INT }
 END.

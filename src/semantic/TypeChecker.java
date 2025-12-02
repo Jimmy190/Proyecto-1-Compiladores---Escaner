@@ -30,10 +30,10 @@ public class TypeChecker {
      * @return true si la asignación es válida
      */
     public boolean checkAssignment(String varName, Symbol.DataType exprType, int line, int column) {
-        Symbol symbol = symbolTable.findVariable(varName);
+        Symbol symbol = symbolTable.checkVariableUsage(varName, line, column);
         
         if (symbol == null) {
-            // Variable no declarada (ya reportado por SymbolTable)
+            // Variable no declarada - error ya reportado por checkVariableUsage
             return false;
         }
         

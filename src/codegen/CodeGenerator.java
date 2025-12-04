@@ -146,7 +146,7 @@ public class CodeGenerator {
     /**
      * Genera código para una asignación (compatible con INT y STRING)
      */
-    public void generateAssignment(String varName, String exprType) {
+   public void generateAssignment(String varName, String exprType) {
 
         String value = semanticStack.pop();
         String var = varName.toLowerCase();
@@ -159,18 +159,25 @@ public class CodeGenerator {
             *          ENTERO
             * ============================ */
             case "INT": {
-
-                if (value.matches("-?\\d+")) {
-                    emitToMain("    mov eax, " + value);               // literal
-                }
-                else if (variableAddresses.containsKey(value)) {
-                    emitToMain("    mov eax, [" + value + "]");       // variable int
-                }
+                
+                // Si el valor YA está en EAX, evitar mov eax, eax
+                if (value.equalsIgnoreCase("eax")) {
+                    emitToMain("    mov [" + var + "], eax");
+                } 
                 else {
-                    emitToMain("    mov eax, " + value);              // registro
+                    // Cargar valor en EAX solo si no está ya allí
+                    if (value.matches("-?\\d+")) {
+                        emitToMain("    mov eax, " + value);               // literal
+                    }
+                    else if (variableAddresses.containsKey(value)) {
+                        emitToMain("    mov eax, [" + value + "]");       // variable int
+                    }
+                    else {
+                        emitToMain("    mov eax, " + value);              // registro/temporal
+                    }
+                    
+                    emitToMain("    mov [" + var + "], eax");
                 }
-
-                emitToMain("    mov [" + var + "], eax");
                 break;
             }
 
@@ -210,7 +217,6 @@ public class CodeGenerator {
         }
     }
 
-
     /**
      * Genera código para cargar una variable en la pila semántica
      */
@@ -226,68 +232,110 @@ public class CodeGenerator {
         semanticStack.push(value);
     }
 
-    
     /**
-     * Genera código para una suma
+     * Verifica si una cadena es un entero
+     */
+    private boolean isInteger(String s) {
+        return s.matches("-?\\d+");
+    }
+
+    /**
+     * Verifica si una cadena es una referencia de memoria (entre corchetes)
+     */
+    private boolean isMemoryReference(String s) {
+        return s.startsWith("[") && s.endsWith("]");
+    }
+
+    /**
+     * Genera código para una suma (+)
+     * Implementa constant folding.
      */
     public void generateAddition() {
         String right = semanticStack.pop();
         String left = semanticStack.pop();
 
+        // ===== CONSTANT FOLDING =====
+        if (isInteger(left) && isInteger(right)) {
+            int result = Integer.parseInt(left) + Integer.parseInt(right);
+            semanticStack.push(String.valueOf(result));
+            return; // Nada de código NASM necesario
+        }
+
         emitToMain("\n; Suma");
 
-        // cargar left en eax:
-        if (left.matches("-?\\d+")) {
+        // ===== Cargar left en eax =====
+        if (isInteger(left)) {
+            emitToMain("    mov eax, " + left);
+        } else if (isMemoryReference(left)) {
+            emitToMain("    mov eax, " + left);
+        } else if (left.equals("eax") || left.equals("ebx") || left.equals("ecx") || left.equals("edx")) {
             emitToMain("    mov eax, " + left);
         } else {
             emitToMain("    mov eax, [" + left + "]");
         }
 
-        // sumar right
-        if (right.matches("-?\\d+")) {
+        // ===== Sumar right =====
+        if (isInteger(right)) {
+            emitToMain("    add eax, " + right);
+        } else if (isMemoryReference(right)) {
+            emitToMain("    add eax, " + right);
+        } else if (right.equals("eax") || right.equals("ebx") || right.equals("ecx") || right.equals("edx")) {
             emitToMain("    add eax, " + right);
         } else {
             emitToMain("    add eax, [" + right + "]");
         }
 
-        // Resultado siempre queda en eax
         semanticStack.push("eax");
     }
 
 
-    
     /**
-     * Genera código para una resta
+     * Genera código para la resta (-)
+     * Implementa constant folding.
      */
     public void generateSubtraction() {
-        String right = semanticStack.pop();  // Operando derecho
-        String left = semanticStack.pop();   // Operando izquierdo
+        String right = semanticStack.pop();
+        String left = semanticStack.pop();
+
+        // ===== CONSTANT FOLDING =====
+        if (isInteger(left) && isInteger(right)) {
+            int result = Integer.parseInt(left) - Integer.parseInt(right);
+            semanticStack.push(String.valueOf(result));
+            return; 
+        }
 
         emitToMain("\n; Resta");
 
-        // === 1. Cargar operando izquierdo en eax ===
+        // ===== Cargar left en eax =====
         if (left.equals("eax")) {
-            // Ya está en eax -> no hacer nada
-        } else if (left.matches("-?\\d+")) {
-            emitToMain("    mov eax, " + left);  // Literal
+            // Ya está en eax, nada
+        } else if (isInteger(left)) {
+            emitToMain("    mov eax, " + left);
+        } else if (isMemoryReference(left)) {
+            emitToMain("    mov eax, " + left);
+        } else if (left.equals("ebx") || left.equals("ecx") || left.equals("edx")) {
+            emitToMain("    mov eax, " + left);
         } else {
-            emitToMain("    mov eax, [" + left + "]");  // Variable
+            emitToMain("    mov eax, [" + left + "]");
         }
 
-        // === 2. Restar operando derecho ===
+        // ===== Restar right =====
         if (right.equals("eax")) {
-            emitToMain("    sub eax, eax");   // Caso raro: X - X
-        } else if (right.matches("-?\\d+")) {
-            emitToMain("    sub eax, " + right); // Literal
-        } else if (right.equals("ebx")) {
-            emitToMain("    sub eax, ebx");   // Registro ebx
+            emitToMain("    sub eax, eax");  
+        } else if (isInteger(right)) {
+            emitToMain("    sub eax, " + right);
+        } else if (right.equals("ebx") || right.equals("ecx") || right.equals("edx")) {
+            emitToMain("    sub eax, " + right);
+        } else if (isMemoryReference(right)) {
+            emitToMain("    sub eax, " + right);
         } else {
-            emitToMain("    sub eax, [" + right + "]"); // Variable
+            emitToMain("    sub eax, [" + right + "]");
         }
 
-        // Resultado queda en eax
         semanticStack.push("eax");
     }
+
+
 
     /**
      * Genera código para incremento (++)

@@ -157,6 +157,8 @@ non terminal
     while_stmt,
     for_stmt,
     if_stmt,
+    if_start,
+    else_start,
     
     // READ y WRITE
     read_stmt,
@@ -734,28 +736,43 @@ for_stmt ::= FOR IDENTIFICADOR ASIGNACION expresion TO expresion DO BEGIN senten
              {: parser.report_error("Error en declaracion de FOR. Formato: 'FOR variable := inicio TO fin DO BEGIN ... END'", null); :}
            ;
 
-if_stmt ::= IF condicion THEN BEGIN sentencias_main END
-            {:     
-                parser.codeGenerator.beginIf();
+if_stmt ::=
+            IF condicion if_start THEN BEGIN sentencias_main END
+            {:
                 parser.codeGenerator.endIfNoElse();
             :}
-          | IF condicion THEN BEGIN sentencias_main END ELSE BEGIN sentencias_main END
+            | IF condicion if_start THEN BEGIN sentencias_main END 
+            ELSE else_start BEGIN sentencias_main END
             {:
-                parser.codeGenerator.beginIf();
-                parser.codeGenerator.generateElse();
                 parser.codeGenerator.endIf();
             :}
-          | IF error BEGIN sentencias_main END
+            | IF error if_start BEGIN sentencias_main END
             {: parser.report_error("Error en la estructura del IF", null); :}
-          | IF condicion THEN error sentencias_main END
+            | IF condicion if_start THEN error sentencias_main END
             {: parser.report_error("Error en la estructura del IF", null); :}
-          | IF condicion THEN BEGIN sentencias_main error
+            | IF condicion if_start THEN BEGIN sentencias_main error
             {: parser.report_error("Error en la estructura del IF", null); :}
-          | IF condicion THEN BEGIN sentencias_main END ELSE BEGIN error END
+            | IF condicion if_start THEN BEGIN sentencias_main END 
+            ELSE else_start BEGIN error END
             {: parser.report_error("Error en la estructura del IF ELSE", null); :}
-          | IF condicion THEN BEGIN sentencias_main END ELSE error sentencias_main END
+            | IF condicion if_start THEN BEGIN sentencias_main END 
+            ELSE else_start error sentencias_main END
             {: parser.report_error("Error en la estructura del IF ELSE", null); :}
-          ;
+            ;
+
+if_start ::= /* empty */
+            {: 
+                parser.codeGenerator.beginIf();  
+            :}
+            ;
+
+else_start ::= /* empty */
+            {: 
+                parser.codeGenerator.generateElse();  
+            :}
+            ;
+
+
 
 /* ========== READ Y WRITE ========== */
 read_stmt ::=

@@ -1,16 +1,22 @@
-{ Test: Uso de variable no declarada }
-PROGRAM TestVariableNoDeclarada
+{ Test: Uso de ELSE }
+PROGRAM TestElse
 VAR
     x : INT;
-    z : INT;
-    i : INT;
-    j : STRING;
-    
-BEGIN
-    
-    IF x = 10 THEN
-        BEGIN
-            x := 12+12;
-        END
+    y : INT;
+    soyString : STRING;
 
+BEGIN
+    x := 5;
+    y := 5;
+
+    x := 1+2+3+4+5;
+
+    IF x = 15 THEN
+        BEGIN   
+            WRITE(soyString);
+        END
+    ELSE
+        BEGIN
+            WRITE("No existe");
+        END
 END.
